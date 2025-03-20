@@ -1,122 +1,204 @@
 'use client'
 
 import { Keypair, PublicKey } from '@solana/web3.js'
-import { useMemo } from 'react'
-import { ellipsify } from '../ui/ui-layout'
-import { ExplorerLink } from '../cluster/cluster-ui'
-import { useSolanavotingdappProgram, useSolanavotingdappProgramAccount } from './solanavotingdapp-data-access'
+import { useMemo, useState } from 'react'
+import { useSolanavotingdappProgram, useVotingProgramAccount } from './solanavotingdapp-data-access'
+import { CircularProgress } from '@mui/material'
+import { BN } from '@coral-xyz/anchor'
 
-export function SolanavotingdappCreate() {
-  const { initialize } = useSolanavotingdappProgram()
+export function VotingList() {
+	const { accounts, getProgramAccount } = useSolanavotingdappProgram()
+	const [searchQuery, setSearchQuery] = useState('')
 
-  return (
-    <button
-      className="btn btn-xs lg:btn-md btn-primary"
-      onClick={() => initialize.mutateAsync(Keypair.generate())}
-      disabled={initialize.isPending}
-    >
-      Create {initialize.isPending && '...'}
-    </button>
-  )
+	if (getProgramAccount.isLoading) {
+		return <span className="loading loading-spinner loading-lg"></span>
+	}
+	if (!getProgramAccount.data?.value) {
+		return (
+			<div className="alert alert-info flex justify-center">
+				<span>Program account not found. Make sure you have deployed the program and are on the correct cluster.</span>
+			</div>
+		)
+	}
+
+	// Filter accounts based on pollName (case-insensitive)
+	const filteredAccounts = useMemo(() => {
+		if (!accounts.data) return []
+		return accounts.data.filter(account =>
+			account.account.pollName?.toLowerCase().includes(searchQuery.toLowerCase())
+		)
+	}, [accounts.data, searchQuery])
+	console.log({ accounts });
+
+
+	return (
+		<div className={'space-y-6'}>
+			<div className="flex justify-center mb-4">
+				<input
+					type="text"
+					placeholder="Search polls..."
+					className="input input-bordered w-full max-w-md"
+					value={searchQuery}
+					onChange={(e) => setSearchQuery(e.target.value)}
+				/>
+			</div>
+
+			{accounts.isLoading ? (
+				<span className="loading loading-spinner loading-lg"></span>
+			) : accounts.data?.length ? (
+				<div className="grid md:grid-cols-4 gap-4">
+					{filteredAccounts.map((account) => (
+						<VotingCard key={account.publicKey.toString()} account={account.publicKey} />
+					))}
+				</div>
+			) : (
+				<div className="text-center">
+					<h2 className={'text-2xl'}>No accounts</h2>
+					No accounts found. Create one above to get started.
+				</div>
+			)}
+		</div>
+	)
 }
 
-export function SolanavotingdappList() {
-  const { accounts, getProgramAccount } = useSolanavotingdappProgram()
+export function VotingPopup({ account, onClose }: { account: PublicKey, onClose: () => void }) {
+	const { accountQuery } = useVotingProgramAccount({
+		account,
+	})
 
-  if (getProgramAccount.isLoading) {
-    return <span className="loading loading-spinner loading-lg"></span>
-  }
-  if (!getProgramAccount.data?.value) {
-    return (
-      <div className="alert alert-info flex justify-center">
-        <span>Program account not found. Make sure you have deployed the program and are on the correct cluster.</span>
-      </div>
-    )
-  }
-  return (
-    <div className={'space-y-6'}>
-      {accounts.isLoading ? (
-        <span className="loading loading-spinner loading-lg"></span>
-      ) : accounts.data?.length ? (
-        <div className="grid md:grid-cols-2 gap-4">
-          {accounts.data?.map((account) => (
-            <SolanavotingdappCard key={account.publicKey.toString()} account={account.publicKey} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center">
-          <h2 className={'text-2xl'}>No accounts</h2>
-          No accounts found. Create one above to get started.
-        </div>
-      )}
-    </div>
-  )
+	const { vote } = useSolanavotingdappProgram()
+
+	type LoadingState = { [key: string]: boolean };
+
+	const pollName = useMemo(() => accountQuery.data?.pollName, [accountQuery.data?.pollName])
+	const pollDescription = useMemo(() => accountQuery.data?.pollDescription, [accountQuery.data?.pollDescription])
+	const proposals = useMemo(() => accountQuery.data?.proposals, [accountQuery.data?.proposals])
+
+	// State to track loading status for each proposal
+	const [loadingState, setLoadingState] = useState<LoadingState>({});
+
+	const handleVoteClick = async (proposal: { candidateName: string, candidateVotes: BN }) => {
+		const pollNameString = pollName || "";
+		const candidateName = proposal.candidateName || "";
+
+		// Set the loading state to true for this proposal
+		setLoadingState((prevState) => ({
+			...prevState,
+			[proposal.candidateName]: true,
+		}));
+
+		// Trigger the vote mutation
+		try {
+			await vote.mutateAsync({ pollName: pollNameString, candidate: candidateName });
+			await accountQuery.refetch();
+		} finally {
+			setLoadingState((prevState) => ({
+				...prevState,
+				[proposal.candidateName]: false,
+			}));
+		}
+	};
+
+	const generateBlink = async () => {
+		if (!pollName) {
+			console.error("Poll name is missing");
+			return;
+		}
+
+		try {
+			const response = await fetch(`/api/vote?votingName=${encodeURIComponent(pollName)}`);
+
+			if (!response.ok) {
+				throw new Error(`Failed to fetch voting data: ${response.statusText}`);
+			}
+
+			const data = await response.json();
+			console.log("Fetched Voting Data:", data);
+
+			// You can update the UI or state with the fetched data here if needed
+
+		} catch (error) {
+			console.error("Error fetching voting data:", error);
+		}
+	}
+
+	return (
+		<div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+			<div className="bg-white p-6 rounded-md shadow-lg max-w-lg w-full">
+				<h2 className="text-2xl font-bold">{pollName}</h2>
+				<p>{pollDescription}</p>
+				<div className="space-y-4 mt-4">
+					<h3 className="text-xl font-semibold">Proposals:</h3>
+					<div className='grid md:grid-cols-3 '>
+						{proposals?.sort((a, b) => b.candidateVotes.toNumber() - a.candidateVotes.toNumber()).map((proposal, index) => (
+							<div key={index} className="p-4 border border-gray-300">
+								<h4 className="text-lg font-bold">{proposal.candidateName}</h4>
+								<p className="text-sm">Votes: {proposal.candidateVotes.toNumber()}</p>
+								<button className='btn btn-xs lg:btn-md rounded' onClick={() => { handleVoteClick(proposal) }} disabled={loadingState[proposal.candidateName]}>
+									{loadingState[proposal.candidateName.toString()] ? (
+										<CircularProgress size={24} color="inherit" />
+									) : (
+										"Vote"
+									)}
+								</button>
+							</div>
+						))}
+					</div>
+				</div>
+				<button
+					className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md"
+					onClick={onClose}
+				>
+					Close
+				</button>
+				<button
+					className="mt-4 ml-2 px-4 py-2 bg-blue-500 text-white rounded-md"
+					onClick={generateBlink}
+				>
+					Generate Blink
+				</button>
+			</div>
+		</div>
+	)
 }
 
-function SolanavotingdappCard({ account }: { account: PublicKey }) {
-  const { accountQuery, incrementMutation, setMutation, decrementMutation, closeMutation } = useSolanavotingdappProgramAccount({
-    account,
-  })
+function VotingCard({ account }: { account: PublicKey }) {
+	const { accountQuery } = useVotingProgramAccount({
+		account,
+	})
 
-  const count = useMemo(() => accountQuery.data?.count ?? 0, [accountQuery.data?.count])
+	const pollName = useMemo(() => accountQuery.data?.pollName, [accountQuery.data?.pollName])
+	const [isModalOpen, setIsModalOpen] = useState(false)
 
-  return accountQuery.isLoading ? (
-    <span className="loading loading-spinner loading-lg"></span>
-  ) : (
-    <div className="card card-bordered border-base-300 border-4 text-neutral-content">
-      <div className="card-body items-center text-center">
-        <div className="space-y-6">
-          <h2 className="card-title justify-center text-3xl cursor-pointer" onClick={() => accountQuery.refetch()}>
-            {count}
-          </h2>
-          <div className="card-actions justify-around">
-            <button
-              className="btn btn-xs lg:btn-md btn-outline"
-              onClick={() => incrementMutation.mutateAsync()}
-              disabled={incrementMutation.isPending}
-            >
-              Increment
-            </button>
-            <button
-              className="btn btn-xs lg:btn-md btn-outline"
-              onClick={() => {
-                const value = window.prompt('Set value to:', count.toString() ?? '0')
-                if (!value || parseInt(value) === count || isNaN(parseInt(value))) {
-                  return
-                }
-                return setMutation.mutateAsync(parseInt(value))
-              }}
-              disabled={setMutation.isPending}
-            >
-              Set
-            </button>
-            <button
-              className="btn btn-xs lg:btn-md btn-outline"
-              onClick={() => decrementMutation.mutateAsync()}
-              disabled={decrementMutation.isPending}
-            >
-              Decrement
-            </button>
-          </div>
-          <div className="text-center space-y-4">
-            <p>
-              <ExplorerLink path={`account/${account}`} label={ellipsify(account.toString())} />
-            </p>
-            <button
-              className="btn btn-xs btn-secondary btn-outline"
-              onClick={() => {
-                if (!window.confirm('Are you sure you want to close this account?')) {
-                  return
-                }
-                return closeMutation.mutateAsync()
-              }}
-              disabled={closeMutation.isPending}
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
+	const openModal = () => {
+		setIsModalOpen(true)
+	}
+
+	const closeModal = () => {
+		setIsModalOpen(false)
+	}
+
+	return accountQuery.isLoading ? (
+		<span className="loading loading-spinner loading-lg"></span>
+	) : (
+		<div className="card card-bordered border-base-300 border-4">
+			<div className="card-body items-center text-center">
+				<div className="space-y-6">
+					<h2 className="card-title justify-center text-3xl cursor-pointer" onClick={openModal}>
+						{pollName}
+					</h2>
+					<div className="card-actions justify-around">
+					</div>
+				</div>
+			</div>
+			{isModalOpen && (
+				<VotingPopup
+					account={account}
+					onClose={closeModal}
+				/>
+			)}
+		</div>
+
+
+	)
 }
