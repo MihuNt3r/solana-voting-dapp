@@ -3,74 +3,72 @@ import { Program } from '@coral-xyz/anchor'
 import { Keypair } from '@solana/web3.js'
 import { Solanavotingdapp } from '../target/types/solanavotingdapp'
 
-describe('solanavotingdapp', () => {
-  // Configure the client to use the local cluster.
-  const provider = anchor.AnchorProvider.env()
-  anchor.setProvider(provider)
-  const payer = provider.wallet as anchor.Wallet
+describe('voting', () => {
+	// Configure the client to use the local cluster.
+	const provider = anchor.AnchorProvider.env()
+	anchor.setProvider(provider)
+	const payer = provider.wallet as anchor.Wallet
 
-  const program = anchor.workspace.Solanavotingdapp as Program<Solanavotingdapp>
+	const program = anchor.workspace.Solanavotingdapp as Program<Solanavotingdapp>
 
-  const solanavotingdappKeypair = Keypair.generate()
+	const votingKeypair = Keypair.generate()
+	const pollName = `Poll - ${Date.now()}`;
+	const [pollAccountPda, pollAccountBump] = anchor.web3.PublicKey.findProgramAddressSync(
+		[Buffer.from("poll"), Buffer.from(pollName)],
+		program.programId
+	);
 
-  it('Initialize Solanavotingdapp', async () => {
-    await program.methods
-      .initialize()
-      .accounts({
-        solanavotingdapp: solanavotingdappKeypair.publicKey,
-        payer: payer.publicKey,
-      })
-      .signers([solanavotingdappKeypair])
-      .rpc()
+	it("Initialize Poll", async () => {
+		const pollDescription = "Vote for the best programmer!";
+		const candidates = ["Alice", "Bob", "Charlie"];
 
-    const currentCount = await program.account.solanavotingdapp.fetch(solanavotingdappKeypair.publicKey)
+		await program.methods
+			.initializePoll(pollName, pollDescription, candidates)
+			.accounts({
+				signer: provider.wallet.publicKey,
+			})
+			.rpc();
 
-    expect(currentCount.count).toEqual(0)
-  })
+		// Fetch the poll account
+		const pollAccount = await program.account.pollAccount.fetch(pollAccountPda);
+		console.log({ pollAccount });
+		// Verify the poll details
+		expect(pollAccount.pollName).toBe(pollName);
+		expect(pollAccount.pollDescription).toBe(pollDescription);
+		expect(pollAccount.proposals.length).toBe(candidates.length);
 
-  it('Increment Solanavotingdapp', async () => {
-    await program.methods.increment().accounts({ solanavotingdapp: solanavotingdappKeypair.publicKey }).rpc()
+		// Verify the candidates
+		for (let i = 0; i < candidates.length; i++) {
+			expect(pollAccount.proposals[i].candidateName).toBe(candidates[i]);
+			expect(pollAccount.proposals[i].candidateVotes.toNumber()).toBe(0);
+		}
 
-    const currentCount = await program.account.solanavotingdapp.fetch(solanavotingdappKeypair.publicKey)
+		for (let i = 0; i < pollAccount.proposals.length; i++) {
+			console.log(pollAccount.proposals[i]);
+		}
+	});
+	it("Votes", async () => {
+		let candidateToVote = "Bob";
+		// Do voting with another account each time
+		// Try to request airdrop if needed
+		await program.methods
+			.vote(pollName, candidateToVote)
+			.accounts({
+				signer: provider.wallet.publicKey,
+			})
+			.rpc();
 
-    expect(currentCount.count).toEqual(1)
-  })
+		// Fetch the poll account
+		const pollAccount = await program.account.pollAccount.fetch(pollAccountPda);
+		console.log({ pollAccount });
 
-  it('Increment Solanavotingdapp Again', async () => {
-    await program.methods.increment().accounts({ solanavotingdapp: solanavotingdappKeypair.publicKey }).rpc()
 
-    const currentCount = await program.account.solanavotingdapp.fetch(solanavotingdappKeypair.publicKey)
+		const candidate = pollAccount.proposals.find(c => c.candidateName == candidateToVote);
 
-    expect(currentCount.count).toEqual(2)
-  })
-
-  it('Decrement Solanavotingdapp', async () => {
-    await program.methods.decrement().accounts({ solanavotingdapp: solanavotingdappKeypair.publicKey }).rpc()
-
-    const currentCount = await program.account.solanavotingdapp.fetch(solanavotingdappKeypair.publicKey)
-
-    expect(currentCount.count).toEqual(1)
-  })
-
-  it('Set solanavotingdapp value', async () => {
-    await program.methods.set(42).accounts({ solanavotingdapp: solanavotingdappKeypair.publicKey }).rpc()
-
-    const currentCount = await program.account.solanavotingdapp.fetch(solanavotingdappKeypair.publicKey)
-
-    expect(currentCount.count).toEqual(42)
-  })
-
-  it('Set close the solanavotingdapp account', async () => {
-    await program.methods
-      .close()
-      .accounts({
-        payer: payer.publicKey,
-        solanavotingdapp: solanavotingdappKeypair.publicKey,
-      })
-      .rpc()
-
-    // The account should no longer exist, returning null.
-    const userAccount = await program.account.solanavotingdapp.fetchNullable(solanavotingdappKeypair.publicKey)
-    expect(userAccount).toBeNull()
-  })
+		expect(candidate?.candidateVotes.toNumber()).toBe(1);
+		// Verify the candidates
+		for (let i = 0; i < pollAccount.proposals.length; i++) {
+			console.log(pollAccount.proposals[i]);
+		}
+	});
 })

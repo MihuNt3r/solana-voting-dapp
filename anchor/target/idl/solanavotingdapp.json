@@ -1,5 +1,5 @@
 {
-  "address": "coUnmi3oBUtwtd9fjeAvSsJssXh5A5xyPbhpewyzRVF",
+  "address": "GGS4omi8yEeDXxi3mRAjpJg4uKKhvBrKmRHp1RmoK134",
   "metadata": {
     "name": "solanavotingdapp",
     "version": "0.1.0",
@@ -8,96 +8,258 @@
   },
   "instructions": [
     {
-      "name": "close",
-      "discriminator": [98, 165, 201, 177, 108, 65, 206, 96],
+      "name": "initialize_poll",
+      "discriminator": [
+        193,
+        22,
+        99,
+        197,
+        18,
+        33,
+        115,
+        117
+      ],
       "accounts": [
         {
-          "name": "payer",
+          "name": "signer",
           "writable": true,
           "signer": true
         },
         {
-          "name": "solanavotingdapp",
-          "writable": true
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "decrement",
-      "discriminator": [106, 227, 168, 59, 248, 27, 150, 101],
-      "accounts": [
-        {
-          "name": "solanavotingdapp",
-          "writable": true
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "increment",
-      "discriminator": [11, 18, 104, 9, 104, 174, 59, 33],
-      "accounts": [
-        {
-          "name": "solanavotingdapp",
-          "writable": true
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "initialize",
-      "discriminator": [175, 175, 109, 31, 13, 152, 155, 237],
-      "accounts": [
-        {
-          "name": "payer",
+          "name": "poll_account",
           "writable": true,
-          "signer": true
-        },
-        {
-          "name": "solanavotingdapp",
-          "writable": true,
-          "signer": true
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  108,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poll_name"
+              }
+            ]
+          }
         },
         {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
-      "args": []
+      "args": [
+        {
+          "name": "poll_name",
+          "type": "string"
+        },
+        {
+          "name": "poll_description",
+          "type": "string"
+        },
+        {
+          "name": "candidates",
+          "type": {
+            "vec": "string"
+          }
+        }
+      ]
     },
     {
-      "name": "set",
-      "discriminator": [198, 51, 53, 241, 116, 29, 126, 194],
+      "name": "vote",
+      "discriminator": [
+        227,
+        110,
+        155,
+        23,
+        136,
+        126,
+        172,
+        25
+      ],
       "accounts": [
         {
-          "name": "solanavotingdapp",
-          "writable": true
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "voter_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  111,
+                  116,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poll_name"
+              },
+              {
+                "kind": "account",
+                "path": "signer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "poll_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  108,
+                  108
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "poll_name"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "value",
-          "type": "u8"
+          "name": "_poll_name",
+          "type": "string"
+        },
+        {
+          "name": "candidate",
+          "type": "string"
         }
       ]
     }
   ],
   "accounts": [
     {
-      "name": "Solanavotingdapp",
-      "discriminator": [255, 176, 4, 245, 188, 253, 124, 25]
+      "name": "PollAccount",
+      "discriminator": [
+        109,
+        254,
+        117,
+        41,
+        232,
+        74,
+        172,
+        45
+      ]
+    },
+    {
+      "name": "VoterAccount",
+      "discriminator": [
+        24,
+        202,
+        161,
+        124,
+        196,
+        184,
+        105,
+        236
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidPollName",
+      "msg": "Poll name cannot be empty"
+    },
+    {
+      "code": 6001,
+      "name": "VotingAlreadyExists",
+      "msg": "Voting with the same name already exists"
+    },
+    {
+      "code": 6002,
+      "name": "IncorrectAmountOfCandidates",
+      "msg": "Incorrect amount of candidates"
+    },
+    {
+      "code": 6003,
+      "name": "CandidateNotFound",
+      "msg": "Candidate not found"
+    },
+    {
+      "code": 6004,
+      "name": "AlreadyVoted",
+      "msg": "Already voted"
     }
   ],
   "types": [
     {
-      "name": "Solanavotingdapp",
+      "name": "Candidate",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "count",
-            "type": "u8"
+            "name": "candidate_name",
+            "type": "string"
+          },
+          {
+            "name": "candidate_votes",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PollAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "poll_name",
+            "type": "string"
+          },
+          {
+            "name": "poll_description",
+            "type": "string"
+          },
+          {
+            "name": "proposals",
+            "type": {
+              "vec": {
+                "defined": {
+                  "name": "Candidate"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "VoterAccount",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "voter",
+            "type": "pubkey"
+          },
+          {
+            "name": "voted_for",
+            "type": "string"
           }
         ]
       }
