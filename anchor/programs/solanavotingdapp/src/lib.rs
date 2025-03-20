@@ -15,19 +15,17 @@ pub mod solanavotingdapp {
     ) -> Result<()> {
         let poll_account = &mut ctx.accounts.poll_account;
 
-        // If we have info inside poll_account it means that we are trying to create voting when voting with the same name already exists
-        if poll_account.has_info() {
-            return Err(ErrorCode::VotingAlreadyExists.into());
-        }
+        // Ensure poll does not already exist
+        require!(!poll_account.has_info(), ErrorCode::VotingAlreadyExists);
 
-        if poll_name.is_empty() {
-            return Err(ErrorCode::InvalidPollName.into());
-        }
+        // Ensure poll name is not empty
+        require!(!poll_name.is_empty(), ErrorCode::InvalidPollName);
 
-        // Check the number of candidates
-        if candidates.len() < 2 || candidates.len() > 10 {
-            return Err(ErrorCode::IncorrectAmountOfCandidates.into());
-        }
+        // Ensure correct number of candidates
+        require!(
+            candidates.len() >= 2 && candidates.len() <= 10,
+            ErrorCode::IncorrectAmountOfCandidates
+        );
 
         // Initialize poll details
         poll_account.poll_name = poll_name;
@@ -51,9 +49,8 @@ pub mod solanavotingdapp {
 
         // Check if the voter has already voted
         let vote_account = &ctx.accounts.voter_account;
-        if vote_account.voter == *signer.key {
-            return Err(ErrorCode::AlreadyVoted.into());
-        }
+        require!(vote_account.voter != *signer.key, ErrorCode::AlreadyVoted);
+
         // Find the candidate
         let candidate = poll_account
             .proposals
