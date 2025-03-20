@@ -13,20 +13,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-          run_install: false
-
       - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - uses: metadaoproject/setup-anchor@v2
         with:
@@ -43,8 +37,8 @@ jobs:
       - name: Check solana config
         run: solana config get
 
-      - run: pnpm run anchor build
+      - run: npm run anchor build
         shell: bash
 
-      - run: pnpm run anchor test
+      - run: npm run anchor test
         shell: bash
