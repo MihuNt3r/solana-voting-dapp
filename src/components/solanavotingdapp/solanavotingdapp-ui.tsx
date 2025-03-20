@@ -4,6 +4,7 @@ import { Keypair, PublicKey } from '@solana/web3.js'
 import { useMemo, useState } from 'react'
 import { useSolanavotingdappProgram, useVotingProgramAccount } from './solanavotingdapp-data-access'
 import { CircularProgress } from '@mui/material'
+import { Button } from '@mui/material'
 import { BN } from '@coral-xyz/anchor'
 
 export function VotingList() {
@@ -134,13 +135,20 @@ export function VotingPopup({ account, onClose }: { account: PublicKey, onClose:
 							<div key={index} className="p-4 border border-gray-300">
 								<h4 className="text-lg font-bold">{proposal.candidateName}</h4>
 								<p className="text-sm">Votes: {proposal.candidateVotes.toNumber()}</p>
-								<button className='btn btn-xs lg:btn-md rounded' onClick={() => { handleVoteClick(proposal) }} disabled={loadingState[proposal.candidateName]}>
+								<Button
+									variant="contained"
+									color="primary"
+									size="small"
+									sx={{ borderRadius: '8px', textTransform: 'none' }}
+									onClick={() => handleVoteClick(proposal)}
+									disabled={loadingState[proposal.candidateName]}
+								>
 									{loadingState[proposal.candidateName.toString()] ? (
-										<CircularProgress size={24} color="inherit" />
+										<CircularProgress size={20} color="inherit" />
 									) : (
 										"Vote"
 									)}
-								</button>
+								</Button>
 							</div>
 						))}
 					</div>
@@ -151,12 +159,12 @@ export function VotingPopup({ account, onClose }: { account: PublicKey, onClose:
 				>
 					Close
 				</button>
-				<button
+				{/* <button
 					className="mt-4 ml-2 px-4 py-2 bg-blue-500 text-white rounded-md"
 					onClick={generateBlink}
 				>
 					Generate Blink
-				</button>
+				</button> */}
 			</div>
 		</div>
 	)

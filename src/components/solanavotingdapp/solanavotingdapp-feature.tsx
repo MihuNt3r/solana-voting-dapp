@@ -5,6 +5,7 @@ import { WalletButton } from '../solana/solana-provider'
 import { AppHero } from '../ui/ui-layout'
 import { VotingList } from './solanavotingdapp-ui'
 import { useRouter } from "next/navigation";
+import { Button } from '@mui/material'
 
 export default function SolanavotingdappFeature() {
 	const { publicKey } = useWallet()
@@ -18,11 +19,14 @@ export default function SolanavotingdappFeature() {
 					'Navigate to Voting compilation page by clicking Create Voting button'
 				}
 			>
-				<button
-					className='btn btn-xs lg:btn-md rounded'
-					onClick={() => router.push('/createVoting')}>
+				<Button
+					variant="contained"
+					color="primary"
+					size="large"
+					onClick={() => router.push('/createVoting')}
+				>
 					Create new Voting
-				</button>
+				</Button>
 			</AppHero>
 			<VotingList />
 		</div>
