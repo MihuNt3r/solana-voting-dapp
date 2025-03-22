@@ -109,9 +109,8 @@ export default function Page() {
 
 				<List>
 					{options.map((option, index) => (
-						<div className='border'>
+						<div className='border' key={index}>
 							<ListItem
-								key={index}
 								secondaryAction={
 									<IconButton edge="end" onClick={() => removeOption(option)}>
 										<DeleteIcon color="error" />
