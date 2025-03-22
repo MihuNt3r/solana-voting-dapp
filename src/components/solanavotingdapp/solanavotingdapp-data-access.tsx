@@ -21,7 +21,10 @@ export function useSolanavotingdappProgram() {
 
 	const accounts = useQuery({
 		queryKey: ['voting', 'all', { cluster }],
-		queryFn: () => program.account.pollAccount.all(),
+		queryFn: () => {
+			console.log(program.account, 'Account');
+			return program.account.pollAccount.all();
+		},
 	})
 
 	const getProgramAccount = useQuery({

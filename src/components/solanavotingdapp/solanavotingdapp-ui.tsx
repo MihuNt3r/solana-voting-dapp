@@ -23,13 +23,9 @@ export function VotingList() {
 	}
 
 	// Filter accounts based on pollName (case-insensitive)
-	const filteredAccounts = useMemo(() => {
-		if (!accounts.data) return []
-		return accounts.data.filter(account =>
-			account.account.pollName?.toLowerCase().includes(searchQuery.toLowerCase())
-		)
-	}, [accounts.data, searchQuery])
-	console.log({ accounts });
+	const filteredAccounts = accounts?.data?.filter(account =>
+		account.account?.pollName?.toLowerCase().includes(searchQuery.toLowerCase())
+	) || [];
 
 
 	return (

@@ -52,7 +52,7 @@ export default function Page() {
 			});
 
 			console.log("Created voting");
-			router.push('/voting');
+			router.push('/solanavotingdapp');
 		} catch (error) {
 			console.error("Error creating voting:", error);
 		} finally {
