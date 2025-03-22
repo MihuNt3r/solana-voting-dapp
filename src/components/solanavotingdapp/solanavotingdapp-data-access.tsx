@@ -2,7 +2,7 @@
 
 import { getSolanavotingdappProgram, getSolanavotingdappProgramId } from '@project/anchor'
 import { useConnection } from '@solana/wallet-adapter-react'
-import { Cluster, Keypair, PublicKey } from '@solana/web3.js'
+import { Cluster, PublicKey } from '@solana/web3.js'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import toast from 'react-hot-toast'
@@ -22,8 +22,8 @@ export function useSolanavotingdappProgram() {
 	const accounts = useQuery({
 		queryKey: ['voting', 'all', { cluster }],
 		queryFn: () => {
-			console.log(program.account, 'Account');
-			return program.account.pollAccount.all();
+			const programAccount = program.account as any;
+			return programAccount.pollAccount.all();
 		},
 	})
 
@@ -114,7 +114,10 @@ export function useVotingProgramAccount({ account }: { account: PublicKey }) {
 
 	const accountQuery = useQuery({
 		queryKey: ['voting', 'fetch', { cluster, account }],
-		queryFn: () => program.account.pollAccount.fetch(account),
+		queryFn: () => {
+			const programAccount = program.account as any;
+			return programAccount.pollAccount.fetch(account)
+		},
 	})
 
 	return {

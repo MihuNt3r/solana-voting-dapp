@@ -1,7 +1,7 @@
 'use client'
 
 import { Keypair, PublicKey } from '@solana/web3.js'
-import { useMemo, useState } from 'react'
+import { Key, useMemo, useState } from 'react'
 import { useSolanavotingdappProgram, useVotingProgramAccount } from './solanavotingdapp-data-access'
 import { CircularProgress } from '@mui/material'
 import { Button } from '@mui/material'
@@ -23,7 +23,7 @@ export function VotingList() {
 	}
 
 	// Filter accounts based on pollName (case-insensitive)
-	const filteredAccounts = accounts?.data?.filter(account =>
+	const filteredAccounts = accounts?.data?.filter((account: { account: { pollName: string } }) =>
 		account.account?.pollName?.toLowerCase().includes(searchQuery.toLowerCase())
 	) || [];
 
@@ -44,7 +44,7 @@ export function VotingList() {
 				<span className="loading loading-spinner loading-lg"></span>
 			) : accounts.data?.length ? (
 				<div className="grid md:grid-cols-4 gap-4">
-					{filteredAccounts.map((account) => (
+					{filteredAccounts.map((account: { publicKey: PublicKey }) => (
 						<VotingCard key={account.publicKey.toString()} account={account.publicKey} />
 					))}
 				</div>
@@ -127,7 +127,7 @@ export function VotingPopup({ account, onClose }: { account: PublicKey, onClose:
 				<div className="space-y-4 mt-4">
 					<h3 className="text-xl font-semibold">Proposals:</h3>
 					<div className='grid md:grid-cols-3 '>
-						{proposals?.sort((a, b) => b.candidateVotes.toNumber() - a.candidateVotes.toNumber()).map((proposal, index) => (
+						{proposals?.sort((a: { candidateVotes: { toNumber: () => number } }, b: { candidateVotes: { toNumber: () => number } }) => b.candidateVotes.toNumber() - a.candidateVotes.toNumber()).map((proposal: { candidateName: any; candidateVotes: any }, index: Key | null | undefined) => (
 							<div key={index} className="p-4 border border-gray-300">
 								<h4 className="text-lg font-bold">{proposal.candidateName}</h4>
 								<p className="text-sm">Votes: {proposal.candidateVotes.toNumber()}</p>
