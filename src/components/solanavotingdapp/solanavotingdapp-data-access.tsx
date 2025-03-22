@@ -11,94 +11,113 @@ import { useAnchorProvider } from '../solana/solana-provider'
 import { useTransactionToast } from '../ui/ui-layout'
 
 export function useSolanavotingdappProgram() {
-  const { connection } = useConnection()
-  const { cluster } = useCluster()
-  const transactionToast = useTransactionToast()
-  const provider = useAnchorProvider()
-  const programId = useMemo(() => getSolanavotingdappProgramId(cluster.network as Cluster), [cluster])
-  const program = useMemo(() => getSolanavotingdappProgram(provider, programId), [provider, programId])
+	const { connection } = useConnection()
+	const { cluster } = useCluster()
+	const transactionToast = useTransactionToast()
+	const provider = useAnchorProvider()
+	const programId = useMemo(() => getSolanavotingdappProgramId(cluster.network as Cluster), [cluster])
+	const program = useMemo(() => getSolanavotingdappProgram(provider, programId), [provider, programId])
 
-  const accounts = useQuery({
-    queryKey: ['solanavotingdapp', 'all', { cluster }],
-    queryFn: () => program.account.solanavotingdapp.all(),
-  })
 
-  const getProgramAccount = useQuery({
-    queryKey: ['get-program-account', { cluster }],
-    queryFn: () => connection.getParsedAccountInfo(programId),
-  })
+	const accounts = useQuery({
+		queryKey: ['voting', 'all', { cluster }],
+		queryFn: () => {
+			console.log(program.account, 'Account');
+			return program.account.pollAccount.all();
+		},
+	})
 
-  const initialize = useMutation({
-    mutationKey: ['solanavotingdapp', 'initialize', { cluster }],
-    mutationFn: (keypair: Keypair) =>
-      program.methods.initialize().accounts({ solanavotingdapp: keypair.publicKey }).signers([keypair]).rpc(),
-    onSuccess: (signature) => {
-      transactionToast(signature)
-      return accounts.refetch()
-    },
-    onError: () => toast.error('Failed to initialize account'),
-  })
+	const getProgramAccount = useQuery({
+		queryKey: ['get-program-account', { cluster }],
+		queryFn: () => connection.getParsedAccountInfo(programId),
+	})
 
-  return {
-    program,
-    programId,
-    accounts,
-    getProgramAccount,
-    initialize,
-  }
+	const initializePoll = useMutation({
+		mutationKey: ['voting', 'initializePoll', { cluster }],
+		mutationFn: ({ pollName, pollDescription, candidates }:
+			{ pollName: string; pollDescription: string; candidates: string[] }) =>
+			program.methods
+				.initializePoll(pollName, pollDescription, candidates)
+				.accounts({ signer: provider.wallet.publicKey })
+				.rpc(),
+		onSuccess: (signature) => {
+			transactionToast(signature)
+			return accounts.refetch()
+		},
+		onError: (error: any) => {
+			console.log({ error });
+			if (error.error.errorCode != null) {
+				if (error.error.errorCode.code === "InvalidPollName") {
+					toast.error("Poll name is invalid")
+					return;
+				}
+				if (error.error.errorCode.code === "VotingAlreadyExists") {
+					toast.error("Voting with the same name already exists")
+					return;
+				}
+				if (error.error.errorCode.code === "IncorrectAmountOfCandidates") {
+					toast.error("Poll has invalid amount of candidates")
+					return;
+				}
+			}
+
+
+			toast.error(`Failed to initialize poll. Error: ${error}`)
+		},
+	})
+
+	const vote = useMutation({
+		mutationKey: ['voting', 'vote', { cluster }],
+		mutationFn: async ({ pollName, candidate }: { pollName: string; candidate: string }) =>
+			program.methods
+				.vote(pollName, candidate)
+				.accounts({
+					signer: provider.wallet.publicKey,
+				})
+				.rpc(),
+		onSuccess: (signature) => {
+			transactionToast(signature)
+			return accounts.refetch()
+		},
+		onError: (error: any) => {
+			console.log({ error });
+			if (error.error.errorCode != null) {
+				if (error.error.errorCode.code === "AlreadyVoted") {
+					toast.error("You already voted in this poll")
+					return;
+				}
+				if (error.error.errorCode.code === "CandidateNotFound") {
+					toast.error("Candidate with given name is not found")
+					return;
+				}
+			}
+			toast.error(`Failed to vote. Error: ${error}`);
+
+		},
+	})
+
+	return {
+		program,
+		programId,
+		accounts,
+		getProgramAccount,
+		initializePoll,
+		vote
+	}
 }
 
-export function useSolanavotingdappProgramAccount({ account }: { account: PublicKey }) {
-  const { cluster } = useCluster()
-  const transactionToast = useTransactionToast()
-  const { program, accounts } = useSolanavotingdappProgram()
 
-  const accountQuery = useQuery({
-    queryKey: ['solanavotingdapp', 'fetch', { cluster, account }],
-    queryFn: () => program.account.solanavotingdapp.fetch(account),
-  })
+export function useVotingProgramAccount({ account }: { account: PublicKey }) {
+	const { cluster } = useCluster()
+	const transactionToast = useTransactionToast()
+	const { program, accounts } = useSolanavotingdappProgram()
 
-  const closeMutation = useMutation({
-    mutationKey: ['solanavotingdapp', 'close', { cluster, account }],
-    mutationFn: () => program.methods.close().accounts({ solanavotingdapp: account }).rpc(),
-    onSuccess: (tx) => {
-      transactionToast(tx)
-      return accounts.refetch()
-    },
-  })
+	const accountQuery = useQuery({
+		queryKey: ['voting', 'fetch', { cluster, account }],
+		queryFn: () => program.account.pollAccount.fetch(account),
+	})
 
-  const decrementMutation = useMutation({
-    mutationKey: ['solanavotingdapp', 'decrement', { cluster, account }],
-    mutationFn: () => program.methods.decrement().accounts({ solanavotingdapp: account }).rpc(),
-    onSuccess: (tx) => {
-      transactionToast(tx)
-      return accountQuery.refetch()
-    },
-  })
-
-  const incrementMutation = useMutation({
-    mutationKey: ['solanavotingdapp', 'increment', { cluster, account }],
-    mutationFn: () => program.methods.increment().accounts({ solanavotingdapp: account }).rpc(),
-    onSuccess: (tx) => {
-      transactionToast(tx)
-      return accountQuery.refetch()
-    },
-  })
-
-  const setMutation = useMutation({
-    mutationKey: ['solanavotingdapp', 'set', { cluster, account }],
-    mutationFn: (value: number) => program.methods.set(value).accounts({ solanavotingdapp: account }).rpc(),
-    onSuccess: (tx) => {
-      transactionToast(tx)
-      return accountQuery.refetch()
-    },
-  })
-
-  return {
-    accountQuery,
-    closeMutation,
-    decrementMutation,
-    incrementMutation,
-    setMutation,
-  }
+	return {
+		accountQuery,
+	}
 }

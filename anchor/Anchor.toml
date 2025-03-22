@@ -1,18 +1,25 @@
 [toolchain]
-anchor_version = "0.30.1"
+anchor_version = "0.31.0"
 
 [features]
 resolution = true
 skip-lint = false
 
 [programs.localnet]
-solanavotingdapp = "coUnmi3oBUtwtd9fjeAvSsJssXh5A5xyPbhpewyzRVF"
+solanavotingdapp = "GGS4omi8yEeDXxi3mRAjpJg4uKKhvBrKmRHp1RmoK134"
+
+[programs.devnet]
+solanavotingdapp = "GGS4omi8yEeDXxi3mRAjpJg4uKKhvBrKmRHp1RmoK134"
+
+[programs.testnet]
+solanavotingdapp = "GGS4omi8yEeDXxi3mRAjpJg4uKKhvBrKmRHp1RmoK134"
+
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "testnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

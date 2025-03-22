@@ -12,18 +12,18 @@ export const SOLANAVOTINGDAPP_PROGRAM_ID = new PublicKey(SolanavotingdappIDL.add
 
 // This is a helper function to get the Solanavotingdapp Anchor program.
 export function getSolanavotingdappProgram(provider: AnchorProvider, address?: PublicKey) {
-  return new Program({ ...SolanavotingdappIDL, address: address ? address.toBase58() : SolanavotingdappIDL.address } as Solanavotingdapp, provider)
+	return new Program({ ...SolanavotingdappIDL, address: address ? address.toBase58() : SolanavotingdappIDL.address } as Solanavotingdapp, provider)
 }
 
 // This is a helper function to get the program ID for the Solanavotingdapp program depending on the cluster.
 export function getSolanavotingdappProgramId(cluster: Cluster) {
-  switch (cluster) {
-    case 'devnet':
-    case 'testnet':
-      // This is the program ID for the Solanavotingdapp program on devnet and testnet.
-      return new PublicKey('coUnmi3oBUtwtd9fjeAvSsJssXh5A5xyPbhpewyzRVF')
-    case 'mainnet-beta':
-    default:
-      return SOLANAVOTINGDAPP_PROGRAM_ID
-  }
+	switch (cluster) {
+		case 'devnet':
+		case 'testnet':
+			// This is the program ID for the Solanavotingdapp program on devnet and testnet.
+			return new PublicKey('GGS4omi8yEeDXxi3mRAjpJg4uKKhvBrKmRHp1RmoK134')
+		case 'mainnet-beta':
+		default:
+			return SOLANAVOTINGDAPP_PROGRAM_ID
+	}
 }
