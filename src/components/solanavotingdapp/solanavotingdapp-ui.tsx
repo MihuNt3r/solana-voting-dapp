@@ -88,6 +88,8 @@ export function VotingPopup({ account, onClose }: { account: PublicKey, onClose:
 		try {
 			await vote.mutateAsync({ pollName: pollNameString, candidate: candidateName });
 			await accountQuery.refetch();
+		} catch (ex) {
+			console.error(ex);
 		} finally {
 			setLoadingState((prevState) => ({
 				...prevState,
