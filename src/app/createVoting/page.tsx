@@ -30,7 +30,6 @@ export default function Page() {
 	const router = useRouter()
 
 	useEffect(() => {
-		// If the user has attempted to submit, validate options again
 		if (hasAttemptedSubmit) {
 			setShowError(options.length < 2 || options.length > 10);
 		}
@@ -106,19 +105,27 @@ export default function Page() {
 					required
 				/>
 
-				<Box display="flex" gap={2} mt={2}>
+				<Box display="flex" gap={2} mt={2} alignItems="center">
 					<TextField
 						label="Option"
 						fullWidth
 						variant="outlined"
 						value={newOption}
 						onChange={(e) => setNewOption(e.target.value)}
+						error={newOption.length > 32}
+						helperText={
+							<span style={{ visibility: newOption.length > 32 ? "visible" : "hidden" }}>
+								Option cannot exceed 32 characters
+							</span>
+						}
 					/>
 					<Button
 						variant="contained"
 						color="primary"
 						onClick={addOption}
 						startIcon={<AddIcon />}
+						disabled={newOption.length > 32}
+						sx={{ height: "56px", alignSelf: "flex-start" }}  // Match TextField height
 					>
 						Add
 					</Button>
