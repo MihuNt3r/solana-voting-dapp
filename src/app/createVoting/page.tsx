@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
 	Button,
 	TextField,
@@ -24,8 +24,17 @@ export default function Page() {
 	const [options, setOptions] = useState<string[]>([]);
 	const [newOption, setNewOption] = useState("");
 	const [loading, setLoading] = useState(false);
+	const [showError, setShowError] = useState(false);
+	const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
 	const { initializePoll } = useSolanavotingdappProgram()
 	const router = useRouter()
+
+	useEffect(() => {
+		// If the user has attempted to submit, validate options again
+		if (hasAttemptedSubmit) {
+			setShowError(options.length < 2 || options.length > 10);
+		}
+	}, [options, hasAttemptedSubmit]);
 
 	const addOption = () => {
 		if (newOption.trim() && !options.includes(newOption)) {
@@ -41,6 +50,14 @@ export default function Page() {
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setLoading(true);
+		setHasAttemptedSubmit(true);
+
+		// Check if the number of options is valid before proceeding
+		if (options.length < 2 || options.length > 10) {
+			setShowError(true);
+			setLoading(false);
+			return;
+		}
 
 		try {
 			console.log("Starting creation of voting");
@@ -123,8 +140,15 @@ export default function Page() {
 					))}
 				</List>
 
+				{/* Error message for invalid number of options */}
+				{showError && (options.length < 2 || options.length > 10) && (
+					<Typography color="error" variant="body2" sx={{ mt: 1 }}>
+						Number of options must be between 2 and 10.
+					</Typography>
+				)}
+
 				<Box display="flex" justifyContent="center" mt={3}>
-					<Button variant="contained" type="submit" size="large" disabled={loading}>
+					<Button variant="contained" type="submit" size="large" disabled={showError && (options.length < 2 || options.length > 10)}>
 						{loading ? <CircularProgress size={24} /> : "Create Voting"}
 					</Button>
 				</Box>
