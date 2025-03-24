@@ -19,7 +19,7 @@ solanavotingdapp = "GGS4omi8yEeDXxi3mRAjpJg4uKKhvBrKmRHp1RmoK134"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "testnet"
+cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
