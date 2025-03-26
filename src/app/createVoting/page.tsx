@@ -125,7 +125,7 @@ export default function Page() {
 						onClick={addOption}
 						startIcon={<AddIcon />}
 						disabled={newOption.length > 32}
-						sx={{ height: "56px", alignSelf: "flex-start" }}  // Match TextField height
+						sx={{ height: "56px", alignSelf: "flex-start" }}
 					>
 						Add
 					</Button>
@@ -155,7 +155,7 @@ export default function Page() {
 				)}
 
 				<Box display="flex" justifyContent="center" mt={3}>
-					<Button variant="contained" type="submit" size="large" disabled={showError && (options.length < 2 || options.length > 10)}>
+					<Button variant="contained" type="submit" size="large" disabled={loading || (showError && (options.length < 2 || options.length > 10))}>
 						{loading ? <CircularProgress size={24} /> : "Create Voting"}
 					</Button>
 				</Box>

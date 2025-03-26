@@ -1,5 +1,10 @@
 #![allow(clippy::result_large_err)]
 
+mod domain;
+
+use domain::Candidate;
+use domain::ErrorCode;
+
 use anchor_lang::prelude::*;
 
 declare_id!("GGS4omi8yEeDXxi3mRAjpJg4uKKhvBrKmRHp1RmoK134");
@@ -16,56 +21,56 @@ pub mod solanavotingdapp {
         let poll_account = &mut ctx.accounts.poll_account;
 
         // Ensure poll does not already exist
-        require!(!poll_account.has_info(), ErrorCode::VotingAlreadyExists);
+        // require!(!poll_account.has_info(), ErrorCode::VotingAlreadyExists);
 
-        // Ensure poll name is not empty
-        require!(!poll_name.is_empty(), ErrorCode::InvalidPollName);
+        // // Ensure poll name is not empty
+        // require!(!poll_name.is_empty(), ErrorCode::InvalidPollName);
 
-        // Ensure correct number of candidates
-        require!(
-            candidates.len() >= 2 && candidates.len() <= 10,
-            ErrorCode::IncorrectAmountOfCandidates
-        );
+        // // Ensure correct number of candidates
+        // require!(
+        //     candidates.len() >= 2 && candidates.len() <= 10,
+        //     ErrorCode::IncorrectAmountOfCandidates
+        // );
 
-        // Initialize poll details
-        poll_account.poll_name = poll_name;
-        poll_account.poll_description = poll_description;
+        // // Initialize poll details
+        // poll_account.poll_name = poll_name;
+        // poll_account.poll_description = poll_description;
 
-        // Initialize candidates
-        poll_account.proposals = candidates
-            .into_iter()
-            .map(|name| Candidate {
-                candidate_name: name,
-                candidate_votes: 0,
-            })
-            .collect();
+        // // Initialize candidates
+        // poll_account.proposals = candidates
+        //     .into_iter()
+        //     .map(|name| Candidate {
+        //         candidate_name: name,
+        //         candidate_votes: 0,
+        //     })
+        //     .collect();
 
         Ok(())
     }
 
     pub fn vote(ctx: Context<Vote>, _poll_name: String, candidate: String) -> Result<()> {
-        let poll_account = &mut ctx.accounts.poll_account;
-        let signer = &mut ctx.accounts.signer;
+        // let poll_account = &mut ctx.accounts.poll_account;
+        // let signer = &mut ctx.accounts.signer;
 
-        // Check if the voter has already voted
-        let vote_account = &ctx.accounts.voter_account;
-        require!(vote_account.voter != *signer.key, ErrorCode::AlreadyVoted);
+        // // Check if the voter has already voted
+        // let vote_account = &ctx.accounts.voter_account;
+        // require!(vote_account.voter != *signer.key, ErrorCode::AlreadyVoted);
 
-        // Find the candidate
-        let candidate = poll_account
-            .proposals
-            .iter_mut()
-            .find(|proposal| proposal.candidate_name == candidate)
-            .ok_or(ErrorCode::CandidateNotFound)?;
+        // // Find the candidate
+        // let candidate = poll_account
+        //     .proposals
+        //     .iter_mut()
+        //     .find(|proposal| proposal.candidate_name == candidate)
+        //     .ok_or(ErrorCode::CandidateNotFound)?;
 
-        // Increment the candidate's votes
-        candidate.candidate_votes += 1;
+        // // Increment the candidate's votes
+        // candidate.candidate_votes += 1;
 
-        // Store the vote in the PDA account
-        let vote_account = &mut ctx.accounts.voter_account;
+        // // Store the vote in the PDA account
+        // let vote_account = &mut ctx.accounts.voter_account;
 
-        vote_account.voter = *signer.key;
-        vote_account.voted_for = candidate.candidate_name.clone();
+        // vote_account.voter = *signer.key;
+        // vote_account.voted_for = candidate.candidate_name.clone();
 
         Ok(())
     }
@@ -116,14 +121,6 @@ pub struct Vote<'info> {
 
 #[account]
 #[derive(InitSpace)]
-pub struct Candidate {
-    #[max_len(32)]
-    pub candidate_name: String,
-    pub candidate_votes: u64,
-}
-
-#[account]
-#[derive(InitSpace)]
 pub struct VoterAccount {
     pub voter: Pubkey,
     #[max_len(32)]
@@ -145,18 +142,4 @@ impl PollAccount {
     pub fn has_info(&self) -> bool {
         !self.poll_name.is_empty() && !self.proposals.is_empty()
     }
-}
-
-#[error_code]
-pub enum ErrorCode {
-    #[msg("Poll name cannot be empty")]
-    InvalidPollName,
-    #[msg("Voting with the same name already exists")]
-    VotingAlreadyExists,
-    #[msg("Incorrect amount of candidates")]
-    IncorrectAmountOfCandidates,
-    #[msg("Candidate not found")]
-    CandidateNotFound,
-    #[msg("Already voted")]
-    AlreadyVoted,
 }

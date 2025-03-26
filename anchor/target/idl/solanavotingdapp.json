@@ -182,25 +182,35 @@
     {
       "code": 6000,
       "name": "InvalidPollName",
-      "msg": "Poll name cannot be empty"
+      "msg": "Poll name cannot be empty or exceed 32 characters"
     },
     {
       "code": 6001,
+      "name": "InvalidPollDescription",
+      "msg": "Poll description cannot be empty or exceed 280 characters"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidCandidateName",
+      "msg": "Candidate name cannot be empty or exceed 32 characters"
+    },
+    {
+      "code": 6003,
       "name": "VotingAlreadyExists",
       "msg": "Voting with the same name already exists"
     },
     {
-      "code": 6002,
+      "code": 6004,
       "name": "IncorrectAmountOfCandidates",
       "msg": "Incorrect amount of candidates"
     },
     {
-      "code": 6003,
+      "code": 6005,
       "name": "CandidateNotFound",
       "msg": "Candidate not found"
     },
     {
-      "code": 6004,
+      "code": 6006,
       "name": "AlreadyVoted",
       "msg": "Already voted"
     }

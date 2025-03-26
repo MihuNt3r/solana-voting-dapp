@@ -51,7 +51,7 @@ export function VotingList() {
 			) : (
 				<div className="text-center">
 					<h2 className={'text-2xl'}>No accounts</h2>
-					No accounts found. Create one above to get started.
+					No polls found. Create one above to get started.
 				</div>
 			)}
 		</div>
@@ -123,7 +123,7 @@ export function VotingPopup({ account, onClose }: { account: PublicKey, onClose:
 
 	return (
 		<div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-			<div className="bg-white p-6 rounded-md shadow-lg max-w-lg w-full">
+			<div className="bg-white p-6 rounded-md shadow-lg w-[75vw] max-w-screen-lg">
 				<h2 className="text-2xl font-bold">{pollName}</h2>
 				<p>{pollDescription}</p>
 				<div className="space-y-4 mt-4">
@@ -131,8 +131,10 @@ export function VotingPopup({ account, onClose }: { account: PublicKey, onClose:
 					<div className='grid md:grid-cols-3 '>
 						{proposals?.sort((a: { candidateVotes: { toNumber: () => number } }, b: { candidateVotes: { toNumber: () => number } }) => b.candidateVotes.toNumber() - a.candidateVotes.toNumber()).map((proposal: { candidateName: any; candidateVotes: any }, index: Key | null | undefined) => (
 							<div key={index} className="p-4 border border-gray-300">
-								<h4 className="text-lg font-bold">{proposal.candidateName}</h4>
-								<p className="text-sm">Votes: {proposal.candidateVotes.toNumber()}</p>
+								<div>
+									<h4 className="text-lg font-bold">{proposal.candidateName}</h4>
+									<p className="text-sm">Votes: {proposal.candidateVotes.toNumber()}</p>
+								</div>
 								<Button
 									variant="contained"
 									color="primary"
@@ -193,8 +195,6 @@ function VotingCard({ account }: { account: PublicKey }) {
 					<h2 className="card-title justify-center text-3xl cursor-pointer" onClick={openModal}>
 						{pollName}
 					</h2>
-					<div className="card-actions justify-around">
-					</div>
 				</div>
 			</div>
 			{isModalOpen && (

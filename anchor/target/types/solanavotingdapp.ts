@@ -188,25 +188,35 @@ export type Solanavotingdapp = {
     {
       "code": 6000,
       "name": "invalidPollName",
-      "msg": "Poll name cannot be empty"
+      "msg": "Poll name cannot be empty or exceed 32 characters"
     },
     {
       "code": 6001,
+      "name": "invalidPollDescription",
+      "msg": "Poll description cannot be empty or exceed 280 characters"
+    },
+    {
+      "code": 6002,
+      "name": "invalidCandidateName",
+      "msg": "Candidate name cannot be empty or exceed 32 characters"
+    },
+    {
+      "code": 6003,
       "name": "votingAlreadyExists",
       "msg": "Voting with the same name already exists"
     },
     {
-      "code": 6002,
+      "code": 6004,
       "name": "incorrectAmountOfCandidates",
       "msg": "Incorrect amount of candidates"
     },
     {
-      "code": 6003,
+      "code": 6005,
       "name": "candidateNotFound",
       "msg": "Candidate not found"
     },
     {
-      "code": 6004,
+      "code": 6006,
       "name": "alreadyVoted",
       "msg": "Already voted"
     }
