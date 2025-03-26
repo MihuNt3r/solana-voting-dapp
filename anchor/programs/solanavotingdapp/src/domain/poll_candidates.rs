@@ -18,4 +18,8 @@ impl PollCandidates {
 
         Ok(PollCandidates(candidates))
     }
+
+	pub fn as_vec(&self) -> Vec<Candidate> {
+		self.0.clone()
+	}
 }

@@ -1,10 +1,8 @@
 use super::errors::ErrorCode;
-use anchor_lang::prelude::{
-    borsh::{BorshDeserialize, BorshSerialize},
-    *,
-};
+use anchor_lang::prelude::*;
 
-#[derive(Debug, InitSpace, BorshSerialize, BorshDeserialize, Clone)]
+#[account]
+#[derive(Debug, InitSpace)]
 pub struct Candidate {
     #[max_len(32)]
     candidate_name: String,
@@ -22,6 +20,10 @@ impl Candidate {
             candidate_votes: 0,
         })
     }
+
+	pub fn candidate_name(&self) -> String {
+		self.candidate_name.clone()
+	}
 
     pub fn vote(&mut self) {
         self.candidate_votes += 1;
