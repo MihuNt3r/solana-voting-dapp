@@ -10,20 +10,20 @@ pub struct Candidate {
 }
 
 impl Candidate {
-    pub fn new(candidate_name: String) -> std::result::Result<Candidate, ErrorCode> {
-        if candidate_name.is_empty() || candidate_name.len() > 32 {
+    pub fn new<S: AsRef<str>>(candidate_name: S) -> std::result::Result<Candidate, ErrorCode> {
+        if candidate_name.as_ref().is_empty() || candidate_name.as_ref().len() > 32 {
             return Err(ErrorCode::InvalidCandidateName);
         }
 
         Ok(Candidate {
-            candidate_name,
+            candidate_name: candidate_name.as_ref().to_string(),
             candidate_votes: 0,
         })
     }
 
-	pub fn candidate_name(&self) -> String {
-		self.candidate_name.clone()
-	}
+    pub fn candidate_name(&self) -> &str {
+        self.candidate_name.as_str()
+    }
 
     pub fn vote(&mut self) {
         self.candidate_votes += 1;

@@ -4,12 +4,12 @@ use super::errors::ErrorCode;
 pub struct PollDescription(String);
 
 impl PollDescription {
-    pub fn new(poll_description: String) -> Result<PollDescription, ErrorCode> {
-        if poll_description.len() > 280 {
+    pub fn new<S: AsRef<str>>(poll_description: S) -> Result<PollDescription, ErrorCode> {
+        if poll_description.as_ref().len() > 280 {
             return Err(ErrorCode::InvalidPollDescription);
         }
 
-        Ok(PollDescription(poll_description))
+        Ok(PollDescription(poll_description.as_ref().to_string()))
     }
 }
 

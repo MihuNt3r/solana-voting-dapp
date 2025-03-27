@@ -26,15 +26,15 @@ pub mod solanavotingdapp {
 
         require!(!poll_account.has_info(), ErrorCode::VotingAlreadyExists);
 
-		// Create domain entities
-		let poll_name = PollName::new(poll_name)?;
-		let poll_description = PollDescription::new(poll_description)?;
-		let poll_candidates = PollCandidates::new(candidates)?;
+        // Create domain entities
+        let poll_name = PollName::new(poll_name)?;
+        let poll_description = PollDescription::new(poll_description)?;
+        let poll_candidates = PollCandidates::new(candidates)?;
 
         // Initialize poll details
         poll_account.poll_name = poll_name.as_ref().to_string();
-		poll_account.poll_description = poll_description.as_ref().to_string();
-		poll_account.proposals = poll_candidates.as_vec();
+        poll_account.poll_description = poll_description.as_ref().to_string();
+        poll_account.proposals = poll_candidates.as_vec();
 
         Ok(())
     }
@@ -61,7 +61,7 @@ pub mod solanavotingdapp {
         let vote_account = &mut ctx.accounts.voter_account;
 
         vote_account.voter = *signer.key;
-        vote_account.voted_for = candidate.candidate_name().clone();
+        vote_account.voted_for = candidate.candidate_name().to_string();
 
         Ok(())
     }

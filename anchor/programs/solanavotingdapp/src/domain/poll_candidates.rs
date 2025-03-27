@@ -6,7 +6,9 @@ use anchor_lang::prelude::*;
 pub struct PollCandidates(#[max_len(10)] Vec<Candidate>);
 
 impl PollCandidates {
-    pub fn new(candidates_names: Vec<String>) -> std::result::Result<PollCandidates, ErrorCode> {
+    pub fn new<S: AsRef<str>>(
+        candidates_names: Vec<S>,
+    ) -> std::result::Result<PollCandidates, ErrorCode> {
         if candidates_names.len() < 2 || candidates_names.len() > 10 {
             return Err(ErrorCode::IncorrectAmountOfCandidates);
         }
@@ -19,7 +21,7 @@ impl PollCandidates {
         Ok(PollCandidates(candidates))
     }
 
-	pub fn as_vec(&self) -> Vec<Candidate> {
-		self.0.clone()
-	}
+    pub fn as_vec(&self) -> Vec<Candidate> {
+        self.0.clone()
+    }
 }

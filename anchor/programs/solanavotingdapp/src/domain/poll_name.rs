@@ -4,12 +4,12 @@ use super::errors::ErrorCode;
 pub struct PollName(String);
 
 impl PollName {
-    pub fn new(poll_name: String) -> Result<PollName, ErrorCode> {
-        if poll_name.is_empty() || poll_name.len() > 32 {
+    pub fn new<S: AsRef<str>>(poll_name: S) -> Result<PollName, ErrorCode> {
+        if poll_name.as_ref().is_empty() || poll_name.as_ref().len() > 32 {
             return Err(ErrorCode::InvalidPollName);
         }
 
-        Ok(PollName(poll_name))
+        Ok(PollName(poll_name.as_ref().to_string()))
     }
 }
 
