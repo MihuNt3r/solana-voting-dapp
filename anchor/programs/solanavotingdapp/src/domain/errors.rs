@@ -1,6 +1,7 @@
 use anchor_lang::error_code;
 
 #[error_code]
+#[derive(PartialEq)]
 pub enum ErrorCode {
     #[msg("Poll name cannot be empty or exceed 32 characters")]
     InvalidPollName,
