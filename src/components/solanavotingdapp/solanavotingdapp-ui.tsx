@@ -12,7 +12,7 @@ export function VotingList() {
 	const { accounts, getProgramAccount } = useSolanavotingdappProgram()
 	const [searchQuery, setSearchQuery] = useState('')
 	const [currentPage, setCurrentPage] = useState(1)
-	const itemsPerPage = 2
+	const itemsPerPage = 16
 
 	if (getProgramAccount.isLoading) {
 		return <span className="loading loading-spinner loading-lg"></span>
