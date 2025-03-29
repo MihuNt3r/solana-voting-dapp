@@ -87,7 +87,7 @@ export function VotingList() {
 				</>
 			) : (
 				<div className="text-center">
-					<h2 className={'text-2xl'}>No accounts</h2>
+					<h2 className={'text-2xl'}>No polls</h2>
 					No polls found. Create one above to get started.
 				</div>
 			)}

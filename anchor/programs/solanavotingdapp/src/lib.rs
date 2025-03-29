@@ -1,6 +1,7 @@
 #![allow(clippy::result_large_err)]
 
 mod domain;
+mod state;
 
 use domain::Candidate;
 use domain::ErrorCode;
@@ -9,6 +10,8 @@ use domain::PollDescription;
 use domain::PollName;
 
 use anchor_lang::prelude::*;
+use state::voter_account::VoterAccount;
+use state::poll_account::PollAccount;
 
 declare_id!("GGS4omi8yEeDXxi3mRAjpJg4uKKhvBrKmRHp1RmoK134");
 
@@ -108,29 +111,4 @@ pub struct Vote<'info> {
     pub poll_account: Account<'info, PollAccount>,
 
     pub system_program: Program<'info, System>,
-}
-
-#[account]
-#[derive(InitSpace)]
-pub struct VoterAccount {
-    pub voter: Pubkey,
-    #[max_len(32)]
-    pub voted_for: String,
-}
-
-#[account]
-#[derive(InitSpace)]
-pub struct PollAccount {
-    #[max_len(32)]
-    pub poll_name: String,
-    #[max_len(280)]
-    pub poll_description: String,
-    #[max_len(10)]
-    pub proposals: Vec<Candidate>,
-}
-
-impl PollAccount {
-    pub fn has_info(&self) -> bool {
-        !self.poll_name.is_empty() && !self.proposals.is_empty()
-    }
 }
