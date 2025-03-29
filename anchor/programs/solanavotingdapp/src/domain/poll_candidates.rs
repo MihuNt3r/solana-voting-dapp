@@ -12,21 +12,19 @@ impl PollCandidates {
         if candidates_names.len() < 2 || candidates_names.len() > 10 {
             return Err(ErrorCode::IncorrectAmountOfCandidates);
         }
+		let mut unique_candidates = HashSet::new();
 
-        let mut unique_candidates = HashSet::new();
-        let mut result_candidates = Vec::new();
+		let candidates = candidates_names
+			.into_iter()
+			.filter(|candidate_name| unique_candidates.insert(candidate_name.as_ref().to_string()))
+			.map(Candidate::new)
+			.collect::<std::result::Result<Vec<Candidate>, ErrorCode>>()?;
 
-        for candidate_name in candidates_names.iter() {
-            if unique_candidates.insert(candidate_name.as_ref()) {
-                result_candidates.push(Candidate::new(candidate_name)?);
-            }
-        }
-
-        if result_candidates.len() < 2 {
+        if candidates.len() < 2 {
             return Err(ErrorCode::IncorrectAmountOfCandidates);
         }
 
-        Ok(PollCandidates(result_candidates))
+        Ok(PollCandidates(candidates))
     }
 
     pub fn as_vec(&self) -> Vec<Candidate> {
@@ -84,5 +82,17 @@ mod tests {
         let poll_candidates = PollCandidates::new(names);
         assert!(poll_candidates.is_ok());
         assert_eq!(poll_candidates.unwrap().as_vec().len(), 10);
+    }
+
+	#[test]
+    fn test_two_candidates_with_the_same_name() {
+        let names = vec!["A", "A"]; 
+
+        let poll_candidates = PollCandidates::new(names);
+        assert!(poll_candidates.is_err());
+        assert_eq!(
+            poll_candidates.unwrap_err(),
+            ErrorCode::IncorrectAmountOfCandidates
+        );
     }
 }
