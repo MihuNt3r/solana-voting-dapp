@@ -6,10 +6,13 @@ import { useSolanavotingdappProgram, useVotingProgramAccount } from './solanavot
 import { CircularProgress } from '@mui/material'
 import { Button } from '@mui/material'
 import { BN } from '@coral-xyz/anchor'
+import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 
 export function VotingList() {
 	const { accounts, getProgramAccount } = useSolanavotingdappProgram()
 	const [searchQuery, setSearchQuery] = useState('')
+	const [currentPage, setCurrentPage] = useState(1)
+	const itemsPerPage = 16
 
 	if (getProgramAccount.isLoading) {
 		return <span className="loading loading-spinner loading-lg"></span>
@@ -27,6 +30,10 @@ export function VotingList() {
 		account.account?.pollName?.toLowerCase().includes(searchQuery.toLowerCase())
 	) || [];
 
+	const totalPages = Math.ceil(filteredAccounts.length / itemsPerPage)
+	const startIndex = (currentPage - 1) * itemsPerPage
+	const paginatedAccounts = filteredAccounts.slice(startIndex, startIndex + itemsPerPage)
+
 
 	return (
 		<div className={'space-y-6'}>
@@ -42,12 +49,39 @@ export function VotingList() {
 
 			{accounts.isLoading ? (
 				<span className="loading loading-spinner loading-lg"></span>
-			) : accounts.data?.length ? (
-				<div className="grid md:grid-cols-4 gap-4">
-					{filteredAccounts.map((account: { publicKey: PublicKey }) => (
-						<VotingCard key={account.publicKey.toString()} account={account.publicKey} />
-					))}
-				</div>
+			) : filteredAccounts.length ? (
+				<>
+					<div className="grid md:grid-cols-4 gap-4">
+						{paginatedAccounts.map((account: { publicKey: PublicKey }) => (
+							<VotingCard key={account.publicKey.toString()} account={account.publicKey} />
+						))}
+					</div>
+
+					{/* Pagination Controls */}
+					<div className="flex justify-center mt-4 space-x-4">
+						<Button
+							variant="contained"
+							color="primary"
+							disabled={currentPage === 1}
+							onClick={() => setCurrentPage((prev) => prev - 1)}
+						>
+							Previous
+						</Button>
+
+						<span className="text-lg font-semibold">
+							Page {currentPage} of {totalPages}
+						</span>
+
+						<Button
+							variant="contained"
+							color="primary"
+							disabled={currentPage === totalPages}
+							onClick={() => setCurrentPage((prev) => prev + 1)}
+						>
+							Next
+						</Button>
+					</div>
+				</>
 			) : (
 				<div className="text-center">
 					<h2 className={'text-2xl'}>No accounts</h2>
@@ -62,6 +96,9 @@ export function VotingPopup({ account, onClose }: { account: PublicKey, onClose:
 	const { accountQuery } = useVotingProgramAccount({
 		account,
 	})
+
+	const { connection } = useConnection();
+  	const { connected } = useWallet();
 
 	const { vote } = useSolanavotingdappProgram()
 
@@ -99,26 +136,35 @@ export function VotingPopup({ account, onClose }: { account: PublicKey, onClose:
 	};
 
 	const generateBlink = async () => {
-		if (!pollName) {
-			console.error("Poll name is missing");
-			return;
-		}
+		const windowAny = window as any;
+		const provider = windowAny.solana;
+		console.log('Provider', provider);
+		// const rpcUrl = provider.getCluster();
+		// console.log('RPC URL', rpcUrl);
+		console.log({ connection });
 
-		try {
-			const response = await fetch(`/api/vote?votingName=${encodeURIComponent(pollName)}`);
+		console.log('Rpc endpoint', connection.rpcEndpoint);
+		console.log({ connected });
+		// if (!pollName) {
+		// 	console.error("Poll name is missing");
+		// 	return;
+		// }
 
-			if (!response.ok) {
-				throw new Error(`Failed to fetch voting data: ${response.statusText}`);
-			}
+		// try {
+		// 	const response = await fetch(`/api/vote?votingName=${encodeURIComponent(pollName)}`);
 
-			const data = await response.json();
-			console.log("Fetched Voting Data:", data);
+		// 	if (!response.ok) {
+		// 		throw new Error(`Failed to fetch voting data: ${response.statusText}`);
+		// 	}
 
-			// You can update the UI or state with the fetched data here if needed
+		// 	const data = await response.json();
+		// 	console.log("Fetched Voting Data:", data);
 
-		} catch (error) {
-			console.error("Error fetching voting data:", error);
-		}
+		// 	// You can update the UI or state with the fetched data here if needed
+
+		// } catch (error) {
+		// 	console.error("Error fetching voting data:", error);
+		// }
 	}
 
 	return (
@@ -159,12 +205,12 @@ export function VotingPopup({ account, onClose }: { account: PublicKey, onClose:
 				>
 					Close
 				</button>
-				{/* <button
+				<button
 					className="mt-4 ml-2 px-4 py-2 bg-blue-500 text-white rounded-md"
 					onClick={generateBlink}
 				>
 					Generate Blink
-				</button> */}
+				</button>
 			</div>
 		</div>
 	)
