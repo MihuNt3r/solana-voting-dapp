@@ -12,7 +12,7 @@ export function VotingList() {
 	const { accounts, getProgramAccount } = useSolanavotingdappProgram()
 	const [searchQuery, setSearchQuery] = useState('')
 	const [currentPage, setCurrentPage] = useState(1)
-	const itemsPerPage = 16
+	const itemsPerPage = 2
 
 	if (getProgramAccount.isLoading) {
 		return <span className="loading loading-spinner loading-lg"></span>
@@ -43,7 +43,10 @@ export function VotingList() {
 					placeholder="Search polls..."
 					className="input input-bordered w-full max-w-md"
 					value={searchQuery}
-					onChange={(e) => setSearchQuery(e.target.value)}
+					onChange={(e) => {
+						setSearchQuery(e.target.value)
+						setCurrentPage(1) 
+					}}
 				/>
 			</div>
 
