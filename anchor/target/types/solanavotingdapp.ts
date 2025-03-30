@@ -67,6 +67,10 @@ export type Solanavotingdapp = {
           "type": "string"
         },
         {
+          "name": "pollCreationDate",
+          "type": "i64"
+        },
+        {
           "name": "candidates",
           "type": {
             "vec": "string"
@@ -197,26 +201,31 @@ export type Solanavotingdapp = {
     },
     {
       "code": 6002,
+      "name": "invalidPollCreationDate",
+      "msg": "Poll creation date cannot be negative"
+    },
+    {
+      "code": 6003,
       "name": "invalidCandidateName",
       "msg": "Candidate name cannot be empty or exceed 32 characters"
     },
     {
-      "code": 6003,
+      "code": 6004,
       "name": "votingAlreadyExists",
       "msg": "Voting with the same name already exists"
     },
     {
-      "code": 6004,
+      "code": 6005,
       "name": "incorrectAmountOfCandidates",
-      "msg": "Incorrect amount of candidates"
+      "msg": "We should have at least 2 but not more than 10 candidates"
     },
     {
-      "code": 6005,
+      "code": 6006,
       "name": "candidateNotFound",
       "msg": "Candidate not found"
     },
     {
-      "code": 6006,
+      "code": 6007,
       "name": "alreadyVoted",
       "msg": "Already voted"
     }
@@ -250,6 +259,10 @@ export type Solanavotingdapp = {
           {
             "name": "pollDescription",
             "type": "string"
+          },
+          {
+            "name": "pollCreationDate",
+            "type": "i64"
           },
           {
             "name": "proposals",

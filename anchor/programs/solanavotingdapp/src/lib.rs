@@ -1,9 +1,8 @@
 #![allow(clippy::result_large_err)]
 
 mod domain;
-mod state;
 mod instructions;
-
+mod state;
 
 use anchor_lang::prelude::*;
 use instructions::initialize_poll::*;
@@ -19,17 +18,19 @@ pub mod solanavotingdapp {
         ctx: Context<InitializePoll>,
         poll_name: String,
         poll_description: String,
+        poll_creation_date: i64,
         candidates: Vec<String>,
     ) -> Result<()> {
-		handle_initialize_poll(
-			ctx,
-			poll_name,
-			poll_description,
-			candidates,
-		)
+        handle_initialize_poll(
+            ctx,
+            poll_name,
+            poll_description,
+            poll_creation_date,
+            candidates,
+        )
     }
 
     pub fn vote(ctx: Context<Vote>, poll_name: String, candidate: String) -> Result<()> {
-		handle_vote(ctx, poll_name, candidate)
+        handle_vote(ctx, poll_name, candidate)
     }
 }

@@ -21,7 +21,6 @@ impl AsRef<str> for PollDescription {
 
 #[cfg(test)]
 mod tests {
-    use super::ErrorCode;
     use super::*;
 
     #[test]

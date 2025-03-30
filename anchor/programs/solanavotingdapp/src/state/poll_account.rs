@@ -1,5 +1,5 @@
-use anchor_lang::prelude::*;
 use crate::domain::Candidate;
+use anchor_lang::prelude::*;
 
 #[account]
 #[derive(InitSpace)]
@@ -8,6 +8,8 @@ pub struct PollAccount {
     pub poll_name: String,
     #[max_len(280)]
     pub poll_description: String,
+
+    pub poll_creation_date: i64,
     #[max_len(10)]
     pub proposals: Vec<Candidate>,
 }

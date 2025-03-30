@@ -36,7 +36,6 @@ impl Candidate {
 
 #[cfg(test)]
 mod tests {
-    use super::ErrorCode;
     use super::*;
 
     #[test]

@@ -9,18 +9,15 @@ impl PollCandidates {
     pub fn new<S: AsRef<str>>(
         candidates_names: Vec<S>,
     ) -> std::result::Result<PollCandidates, ErrorCode> {
-        if candidates_names.len() < 2 || candidates_names.len() > 10 {
-            return Err(ErrorCode::IncorrectAmountOfCandidates);
-        }
-		let mut unique_candidates = HashSet::new();
+        let mut unique_candidates = HashSet::new();
 
-		let candidates = candidates_names
-			.into_iter()
-			.filter(|candidate_name| unique_candidates.insert(candidate_name.as_ref().to_string()))
-			.map(Candidate::new)
-			.collect::<std::result::Result<Vec<Candidate>, ErrorCode>>()?;
+        let candidates = candidates_names
+            .into_iter()
+            .filter(|candidate_name| unique_candidates.insert(candidate_name.as_ref().to_string()))
+            .map(Candidate::new)
+            .collect::<std::result::Result<Vec<Candidate>, ErrorCode>>()?;
 
-        if candidates.len() < 2 {
+        if candidates.len() < 2 || candidates.len() > 10 {
             return Err(ErrorCode::IncorrectAmountOfCandidates);
         }
 
@@ -34,7 +31,6 @@ impl PollCandidates {
 
 #[cfg(test)]
 mod tests {
-    use super::ErrorCode;
     use super::*;
 
     #[test]
@@ -58,7 +54,7 @@ mod tests {
 
     #[test]
     fn test_too_many_poll_candidates() {
-        let names = vec!["A"; 11]; // 11 candidates, exceeding limit
+        let names = vec!["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K"]; // 11 candidates
         let poll_candidates = PollCandidates::new(names);
         assert!(poll_candidates.is_err());
         assert_eq!(
@@ -84,9 +80,9 @@ mod tests {
         assert_eq!(poll_candidates.unwrap().as_vec().len(), 10);
     }
 
-	#[test]
+    #[test]
     fn test_two_candidates_with_the_same_name() {
-        let names = vec!["A", "A"]; 
+        let names = vec!["A", "A"];
 
         let poll_candidates = PollCandidates::new(names);
         assert!(poll_candidates.is_err());
