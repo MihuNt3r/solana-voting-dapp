@@ -30,9 +30,16 @@ export function VotingList() {
 		account.account?.pollName?.toLowerCase().includes(searchQuery.toLowerCase())
 	) || [];
 
-	const totalPages = Math.ceil(filteredAccounts.length / itemsPerPage)
+	// Sort accounts by pollCreationDate in descending order
+	const sortedAccounts = filteredAccounts.sort((a: { account: { pollCreationDate: BN } }, b: { account: { pollCreationDate: BN } }) => {
+		const dateA = a.account.pollCreationDate.toNumber()
+		const dateB = b.account.pollCreationDate.toNumber()
+		return dateB - dateA;
+	})
+
+	const totalPages = Math.ceil(sortedAccounts.length / itemsPerPage)
 	const startIndex = (currentPage - 1) * itemsPerPage
-	const paginatedAccounts = filteredAccounts.slice(startIndex, startIndex + itemsPerPage)
+	const paginatedAccounts = sortedAccounts.slice(startIndex, startIndex + itemsPerPage)
 
 
 	return (
@@ -45,7 +52,7 @@ export function VotingList() {
 					value={searchQuery}
 					onChange={(e) => {
 						setSearchQuery(e.target.value)
-						setCurrentPage(1) 
+						setCurrentPage(1)
 					}}
 				/>
 			</div>
@@ -101,7 +108,7 @@ export function VotingPopup({ account, onClose }: { account: PublicKey, onClose:
 	})
 
 	const { connection } = useConnection();
-  	const { connected } = useWallet();
+	const { connected } = useWallet();
 
 	const { vote } = useSolanavotingdappProgram()
 

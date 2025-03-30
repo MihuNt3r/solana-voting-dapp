@@ -9,6 +9,7 @@ import toast from 'react-hot-toast'
 import { useCluster } from '../cluster/cluster-data-access'
 import { useAnchorProvider } from '../solana/solana-provider'
 import { useTransactionToast } from '../ui/ui-layout'
+import * as anchor from '@coral-xyz/anchor'
 
 export function useSolanavotingdappProgram() {
 	const { connection } = useConnection()
@@ -38,11 +39,18 @@ export function useSolanavotingdappProgram() {
 	const initializePoll = useMutation({
 		mutationKey: ['voting', 'initializePoll', { cluster }],
 		mutationFn: ({ pollName, pollDescription, candidates }:
-			{ pollName: string; pollDescription: string; candidates: string[] }) =>
-			program.methods
-				.initializePoll(pollName, pollDescription, candidates)
-				.accounts({ signer: provider.wallet.publicKey })
-				.rpc(),
+			{ pollName: string; pollDescription: string; candidates: string[] }) => {
+			const date = new Date();
+			const timestamp = Math.floor(date.getTime() / 1000);
+			const timestampBN = new anchor.BN(timestamp);
+
+			return program.methods
+				.initializePoll(pollName, pollDescription, timestampBN, candidates)
+				.accounts({
+					signer: provider.wallet.publicKey,
+				})
+				.rpc()
+		},
 		onSuccess: (signature) => {
 			transactionToast(signature)
 			return accounts.refetch()

@@ -27,6 +27,11 @@ describe('voting', () => {
 	);
 
 	beforeAll(async () => {
+		const date = new Date();
+		const timestamp = Math.floor(date.getTime() / 1000);
+
+		const timestampBN = new anchor.BN(timestamp);
+
 		const airdropSignature1 = await provider.connection.requestAirdrop(
 			votingKeypair1.publicKey,
 			anchor.web3.LAMPORTS_PER_SOL
@@ -38,7 +43,7 @@ describe('voting', () => {
 		);
 
 		await program.methods
-			.initializePoll(testPollName2, pollDescription, candidates)
+			.initializePoll(testPollName2, pollDescription, timestampBN, candidates)
 			.accounts({
 				signer: provider.wallet.publicKey,
 			})
@@ -51,9 +56,14 @@ describe('voting', () => {
 	})
 
 	it("Initialize Poll", async () => {
+		const date = new Date();
+		const timestamp = Math.floor(date.getTime() / 1000);
+
+		const timestampBN = new anchor.BN(timestamp);
+
 
 		await program.methods
-			.initializePoll(testPollName, pollDescription, candidates)
+			.initializePoll(testPollName, pollDescription, timestampBN, candidates)
 			.accounts({
 				signer: provider.wallet.publicKey,
 			})
@@ -81,10 +91,15 @@ describe('voting', () => {
 	it("Is not possible to initialize Poll with incorrect amount of candidates", async () => {
 		const pollNameWithEmptyCandidates = "Poll with empty candidates";
 		const emptyCandidatesArray: string[] = [];
+		const date = new Date();
+		const timestamp = Math.floor(date.getTime() / 1000);
+
+		const timestampBN = new anchor.BN(timestamp);
+
 
 		try {
 			await program.methods
-				.initializePoll(pollNameWithEmptyCandidates, pollDescription, emptyCandidatesArray)
+				.initializePoll(pollNameWithEmptyCandidates, pollDescription, timestampBN, emptyCandidatesArray)
 				.accounts({
 					signer: provider.wallet.publicKey,
 				})
@@ -93,16 +108,21 @@ describe('voting', () => {
 			console.log("Expected error on incorrect amount of candidates:", { error });
 			console.log(error.error)
 			expect(error.error.errorCode.code).toBe("IncorrectAmountOfCandidates")
-			expect(error.error.errorMessage).toContain("Incorrect amount of candidates");
+			expect(error.error.errorMessage).toContain("We should have at least 2 but not more than 10 candidates");
 		}
 	});
 
 	it("Is not possible to initialize Poll with empty name", async () => {
 		const emptyPollName = "";
+		const date = new Date();
+		const timestamp = Math.floor(date.getTime() / 1000);
+
+		const timestampBN = new anchor.BN(timestamp);
+
 
 		try {
 			await program.methods
-				.initializePoll(emptyPollName, pollDescription, candidates)
+				.initializePoll(emptyPollName, pollDescription, timestampBN, candidates)
 				.accounts({
 					signer: provider.wallet.publicKey,
 				})
@@ -117,6 +137,11 @@ describe('voting', () => {
 		const duplicatedPollName = `Same name - ${Date.now()}`;
 		const pollDescription = "Vote for the best programmer!";
 		const candidates = ["Alice", "Bob", "Charlie"];
+		const emptyPollName = "";
+		const date = new Date();
+		const timestamp = Math.floor(date.getTime() / 1000);
+
+		const timestampBN = new anchor.BN(timestamp);
 
 		const [duplicatedtestPollAccount1Pda, pollAccountBump] = anchor.web3.PublicKey.findProgramAddressSync(
 			[Buffer.from("poll"), Buffer.from(duplicatedPollName)],
@@ -125,7 +150,7 @@ describe('voting', () => {
 
 		// First initialization (should succeed)
 		await program.methods
-			.initializePoll(duplicatedPollName, pollDescription, candidates)
+			.initializePoll(duplicatedPollName, pollDescription, timestampBN, candidates)
 			.accounts({
 				signer: provider.wallet.publicKey,
 			})
@@ -140,7 +165,7 @@ describe('voting', () => {
 		// Second attempt (should fail)
 		try {
 			await program.methods
-				.initializePoll(duplicatedPollName, pollDescription, candidates)
+				.initializePoll(duplicatedPollName, pollDescription, timestampBN, candidates)
 				.accounts({
 					signer: provider.wallet.publicKey,
 				})
