@@ -215,12 +215,12 @@ export function VotingPopup({ account, onClose }: { account: PublicKey, onClose:
 				>
 					Close
 				</button>
-				<button
+				{/* <button
 					className="mt-4 ml-2 px-4 py-2 bg-blue-500 text-white rounded-md"
 					onClick={generateBlink}
 				>
 					Generate Blink
-				</button>
+				</button> */}
 			</div>
 		</div>
 	)
