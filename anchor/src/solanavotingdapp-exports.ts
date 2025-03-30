@@ -19,6 +19,7 @@ export function getSolanavotingdappProgram(provider: AnchorProvider, address?: P
 export function getSolanavotingdappProgramId(cluster: Cluster) {
 	switch (cluster) {
 		case 'devnet':
+			return new PublicKey('9rYcpj6uzpwrn5nUPEwNYMG57wiVXShTowA6aDKEvKei')
 		case 'testnet':
 			// This is the program ID for the Solanavotingdapp program on devnet and testnet.
 			return new PublicKey('GGS4omi8yEeDXxi3mRAjpJg4uKKhvBrKmRHp1RmoK134')
