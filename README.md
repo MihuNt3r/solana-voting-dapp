@@ -1,4 +1,25 @@
-# legacy-solana-voting-dapp
+# solana-voting-dapp
+
+# User site instruction
+
+Use link: https://solana-voting-dapp-alpha.vercel.app/
+
+In order to use application\
+Firstly connect your Phantom wallet
+![alt text](images/PhantomWallet.png)
+
+Then, in the top right corner select "devnet"
+![alt text](images/Devnet.png)
+
+Then, go to the "Account" page
+![alt text](images/Account.png)
+
+And request Airdrop
+![alt text](images/Airdrop.png)
+![alt text](images/RequestAirdrop.png)
+
+Now you can go into "Solanavotingdapp program" and create your own Votings and Vote in existing ones
+![alt text](images/VotingProgram.png)
 
 ## Getting Started
 
