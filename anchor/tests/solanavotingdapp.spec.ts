@@ -4,266 +4,172 @@ import { Keypair } from '@solana/web3.js'
 import { Solanavotingdapp } from '../target/types/solanavotingdapp'
 
 describe('voting', () => {
-	// Configure the client to use the local cluster.
-	const provider = anchor.AnchorProvider.env()
-	anchor.setProvider(provider)
-	const payer = provider.wallet as anchor.Wallet
+	const provider = anchor.AnchorProvider.env();
+	anchor.setProvider(provider);
 
-	const program = anchor.workspace.Solanavotingdapp as Program<Solanavotingdapp>
+	const program = anchor.workspace.Solanavotingdapp as Program<Solanavotingdapp>;
 
-	const votingKeypair1 = Keypair.generate()
-	const votingKeypair2 = Keypair.generate()
-	const testPollName = `Poll - ${Date.now()}`;
-	const testPollName2 = `Poll - ${Date.now()} - 2`;
+	const firstVoter = Keypair.generate();
+	const secondVoter = Keypair.generate();
 	const pollDescription = "Vote for the best programmer!";
 	const candidates = ["Alice", "Bob", "Charlie"];
-	const [testPollAccount1Pda, pollAccountBump] = anchor.web3.PublicKey.findProgramAddressSync(
-		[Buffer.from("poll"), Buffer.from(testPollName)],
-		program.programId
-	);
-	const [testPollAccount2Pda, pollAccountBump2] = anchor.web3.PublicKey.findProgramAddressSync(
-		[Buffer.from("poll"), Buffer.from(testPollName2)],
-		program.programId
-	);
+
+	// Helper function to get the current timestamp as a BN
+	const getTimestampBN = () => new anchor.BN(Math.floor(Date.now() / 1000));
+
+	// Helper function to initialize a poll
+	const initializePoll = async (pollName: string) => {
+		await program.methods
+			.initializePoll(pollName, pollDescription, getTimestampBN(), candidates)
+			.accounts({ signer: provider.wallet.publicKey })
+			.rpc();
+
+		const [pollPda] = anchor.web3.PublicKey.findProgramAddressSync(
+			[Buffer.from("poll"), Buffer.from(pollName)],
+			program.programId
+		);
+
+		return pollPda;
+	};
+
+	// Helper function to expect an error
+	const expectError = async (fn: () => Promise<any>, errorCode: string, errorMessage: string) => {
+		await expect(fn()).rejects.toMatchObject({
+			error: { errorCode: { code: errorCode }, errorMessage: expect.stringContaining(errorMessage) }
+		});
+	};
 
 	beforeAll(async () => {
-		const airdropSignature1 = await provider.connection.requestAirdrop(
-			votingKeypair1.publicKey,
-			anchor.web3.LAMPORTS_PER_SOL
-		);
-
-		const airdropSignature2 = await provider.connection.requestAirdrop(
-			votingKeypair2.publicKey,
-			anchor.web3.LAMPORTS_PER_SOL
-		);
-
-		await program.methods
-			.initializePoll(testPollName2, pollDescription, candidates)
-			.accounts({
-				signer: provider.wallet.publicKey,
-			})
-			.rpc();
-
 		await Promise.all([
-			provider.connection.confirmTransaction(airdropSignature1),
-			provider.connection.confirmTransaction(airdropSignature2)
+			provider.connection.requestAirdrop(firstVoter.publicKey, anchor.web3.LAMPORTS_PER_SOL),
+			provider.connection.requestAirdrop(secondVoter.publicKey, anchor.web3.LAMPORTS_PER_SOL),
 		]);
-	})
+	});
 
-	it("Initialize Poll", async () => {
+	it("Initializes a poll successfully", async () => {
+		const testPollName = `Poll - ${Date.now()}`;
+		const pollPda = await initializePoll(testPollName);
+		const pollAccount = await program.account.pollAccount.fetch(pollPda);
 
-		await program.methods
-			.initializePoll(testPollName, pollDescription, candidates)
-			.accounts({
-				signer: provider.wallet.publicKey,
-			})
-			.rpc();
-
-		// Fetch the poll account
-		const pollAccount = await program.account.pollAccount.fetch(testPollAccount1Pda);
-		console.log({ pollAccount });
-		// Verify the poll details
 		expect(pollAccount.pollName).toBe(testPollName);
 		expect(pollAccount.pollDescription).toBe(pollDescription);
 		expect(pollAccount.proposals.length).toBe(candidates.length);
 
-		// Verify the candidates
-		for (let i = 0; i < candidates.length; i++) {
-			expect(pollAccount.proposals[i].candidateName).toBe(candidates[i]);
+		candidates.forEach((candidate, i) => {
+			expect(pollAccount.proposals[i].candidateName).toBe(candidate);
 			expect(pollAccount.proposals[i].candidateVotes.toNumber()).toBe(0);
-		}
-
-		for (let i = 0; i < pollAccount.proposals.length; i++) {
-			console.log(pollAccount.proposals[i]);
-		}
+		});
 	});
 
-	it("Is not possible to initialize Poll with incorrect amount of candidates", async () => {
-		const pollNameWithEmptyCandidates = "Poll with empty candidates";
-		const emptyCandidatesArray: string[] = [];
-
-		try {
-			await program.methods
-				.initializePoll(pollNameWithEmptyCandidates, pollDescription, emptyCandidatesArray)
-				.accounts({
-					signer: provider.wallet.publicKey,
-				})
-				.rpc();
-		} catch (error: any) {
-			console.log("Expected error on incorrect amount of candidates:", { error });
-			console.log(error.error)
-			expect(error.error.errorCode.code).toBe("IncorrectAmountOfCandidates")
-			expect(error.error.errorMessage).toContain("Incorrect amount of candidates");
-		}
-	});
-
-	it("Is not possible to initialize Poll with empty name", async () => {
-		const emptyPollName = "";
-
-		try {
-			await program.methods
-				.initializePoll(emptyPollName, pollDescription, candidates)
-				.accounts({
-					signer: provider.wallet.publicKey,
-				})
-				.rpc();
-		} catch (error: any) {
-			expect(error.error.errorCode.code).toBe("InvalidPollName")
-			expect(error.error.errorMessage).toContain("Poll name cannot be empty");
-		}
-	});
-
-	it("Is not possible to initialize Voting with the same name twice", async () => {
-		const duplicatedPollName = `Same name - ${Date.now()}`;
-		const pollDescription = "Vote for the best programmer!";
-		const candidates = ["Alice", "Bob", "Charlie"];
-
-		const [duplicatedtestPollAccount1Pda, pollAccountBump] = anchor.web3.PublicKey.findProgramAddressSync(
-			[Buffer.from("poll"), Buffer.from(duplicatedPollName)],
-			program.programId
+	it("Fails to initialize a poll with no candidates", async () => {
+		await expectError(
+			() => program.methods
+				.initializePoll("Empty Poll", pollDescription, getTimestampBN(), [])
+				.accounts({ signer: provider.wallet.publicKey })
+				.rpc(),
+			"IncorrectAmountOfCandidates",
+			"We should have at least 2 but not more than 10 candidates"
 		);
-
-		// First initialization (should succeed)
-		await program.methods
-			.initializePoll(duplicatedPollName, pollDescription, candidates)
-			.accounts({
-				signer: provider.wallet.publicKey,
-			})
-			.rpc();
-
-		// Fetch and verify the first poll
-		const pollAccount = await program.account.pollAccount.fetch(duplicatedtestPollAccount1Pda);
-		expect(pollAccount.pollName).toBe(duplicatedPollName);
-		expect(pollAccount.pollDescription).toBe(pollDescription);
-		expect(pollAccount.proposals.length).toBe(candidates.length);
-
-		// Second attempt (should fail)
-		try {
-			await program.methods
-				.initializePoll(duplicatedPollName, pollDescription, candidates)
-				.accounts({
-					signer: provider.wallet.publicKey,
-				})
-				.rpc();
-
-			// If the second call succeeds, the test should fail
-			throw new Error("Poll initialization with duplicate name succeeded, but it should have failed.");
-		} catch (error: any) {
-			expect(error.error.errorCode.code).toBe("VotingAlreadyExists")
-			expect(error.error.errorMessage).toContain("Voting with the same name already exists");
-		}
 	});
 
-	it("Votes", async () => {
-		let candidateToVote = "Bob";
-		// Do voting with another account each time
-		// Try to request airdrop if needed
-		await program.methods
-			.vote(testPollName, candidateToVote)
-			.accounts({
-				signer: provider.wallet.publicKey,
-			})
-			.rpc();
-
-		// Fetch the poll account
-		const pollAccount = await program.account.pollAccount.fetch(testPollAccount1Pda);
-		console.log({ pollAccount });
-
-
-		const candidate = pollAccount.proposals.find(c => c.candidateName == candidateToVote);
-
-		expect(candidate?.candidateVotes.toNumber()).toBe(1);
-		// Verify the candidates
-		for (let i = 0; i < pollAccount.proposals.length; i++) {
-			console.log(pollAccount.proposals[i]);
-		}
+	it("Fails to initialize a poll with an empty name", async () => {
+		await expectError(
+			() => program.methods
+				.initializePoll("", pollDescription, getTimestampBN(), candidates)
+				.accounts({ signer: provider.wallet.publicKey })
+				.rpc(),
+			"InvalidPollName",
+			"Poll name cannot be empty"
+		);
 	});
 
-	it("Is impossible for user to vote two times in the same poll", async () => {
-		let candidateToVote = "Alice";
-		// Do voting with another account each time
-		// Try to request airdrop if needed
+	it("Fails to initialize a poll with the same name twice", async () => {
+		const duplicatedPollName = `Duplicate Poll - ${Date.now()}`;
+		await initializePoll(duplicatedPollName);
+
+		await expectError(
+			() => program.methods
+				.initializePoll(duplicatedPollName, pollDescription, getTimestampBN(), candidates)
+				.accounts({ signer: provider.wallet.publicKey })
+				.rpc(),
+			"VotingAlreadyExists",
+			"Voting with the same name already exists"
+		);
+	});
+
+	it("Allows voting and updates candidate votes", async () => {
+		const testPollName = `Voting Poll - ${Date.now()}`;
+		const pollPda = await initializePoll(testPollName);
+		const candidateToVote = "Bob";
+
 		await program.methods
 			.vote(testPollName, candidateToVote)
-			.accounts({
-				signer: votingKeypair1.publicKey,
-			})
-			.signers([votingKeypair1])
+			.accounts({ signer: provider.wallet.publicKey })
 			.rpc();
 
-		// Fetch the poll account
-		const pollAccount = await program.account.pollAccount.fetch(testPollAccount1Pda);
-		console.log({ pollAccount });
-
-
-		const candidate = pollAccount.proposals.find(c => c.candidateName == candidateToVote);
+		const updatedPollAccount = await program.account.pollAccount.fetch(pollPda);
+		const candidate = updatedPollAccount.proposals.find(c => c.candidateName === candidateToVote);
 
 		expect(candidate?.candidateVotes.toNumber()).toBe(1);
-		// Verify the candidates
-		for (let i = 0; i < pollAccount.proposals.length; i++) {
-			console.log(pollAccount.proposals[i]);
-		}
+	});
 
-		// Second vote should fail
-		try {
-			await program.methods
+	it("Prevents double voting by the same user", async () => {
+		const testPollName = `Poll - ${Date.now()}`;
+		await initializePoll(testPollName);
+		const candidateToVote = "Alice";
+
+		await program.methods
+			.vote(testPollName, candidateToVote)
+			.accounts({ signer: firstVoter.publicKey })
+			.signers([firstVoter])
+			.rpc();
+
+		await expectError(
+			() => program.methods
 				.vote(testPollName, candidateToVote)
-				.accounts({
-					signer: votingKeypair1.publicKey,
-				})
-				.signers([votingKeypair1])
-				.rpc();
-
-			// If the second vote succeeds, the test should fail
-			throw new Error("User was able to vote twice, but it should be impossible.");
-		} catch (error: any) {
-			console.log("Expected error on second vote:", { error });
-			console.log(error.error)
-			expect(error.error.errorCode.code).toBe("AlreadyVoted")
-			expect(error.error.errorMessage).toContain("Already voted");
-		}
-
-		expect(candidate?.candidateVotes.toNumber()).toBe(1);
+				.accounts({ signer: firstVoter.publicKey })
+				.signers([firstVoter])
+				.rpc(),
+			"AlreadyVoted",
+			"Already voted"
+		);
 	});
 
-	it("Is possible for two different users to vote in poll", async () => {
-		let candidateToVote = "Alice";
-		// Do voting with another account each time
-		// Try to request airdrop if needed
-		await program.methods
-			.vote(testPollName2, candidateToVote)
-			.accounts({
-				signer: votingKeypair1.publicKey,
-			})
-			.signers([votingKeypair1])
-			.rpc();
-
-		// Fetch the poll account
-		let pollAccount = await program.account.pollAccount.fetch(testPollAccount2Pda);
-		console.log({ pollAccount });
-
-
-		let candidate = pollAccount.proposals.find(c => c.candidateName == candidateToVote);
-
-		expect(candidate?.candidateVotes.toNumber()).toBe(1);
-		// Verify the candidates
-		for (let i = 0; i < pollAccount.proposals.length; i++) {
-			console.log(pollAccount.proposals[i]);
-		}
+	it("Allows different users to vote on the same poll", async () => {
+		const testPollName = `Multi-Vote Poll - ${Date.now()}`;
+		const pollPda = await initializePoll(testPollName);
+		const candidateToVote = "Alice";
 
 		await program.methods
-			.vote(testPollName2, candidateToVote)
-			.accounts({
-				signer: votingKeypair2.publicKey,
-			})
-			.signers([votingKeypair2])
+			.vote(testPollName, candidateToVote)
+			.accounts({ signer: firstVoter.publicKey })
+			.signers([firstVoter])
 			.rpc();
 
-		pollAccount = await program.account.pollAccount.fetch(testPollAccount2Pda);
-		console.log({ pollAccount });
+		await program.methods
+			.vote(testPollName, candidateToVote)
+			.accounts({ signer: secondVoter.publicKey })
+			.signers([secondVoter])
+			.rpc();
 
-		candidate = pollAccount.proposals.find(c => c.candidateName == candidateToVote);
+		const updatedPollAccount = await program.account.pollAccount.fetch(pollPda);
+		const candidate = updatedPollAccount.proposals.find(c => c.candidateName === candidateToVote);
 
 		expect(candidate?.candidateVotes.toNumber()).toBe(2);
 	});
-})
+
+	it("Fails to vote for non-existent candidate", async () => {
+		const testPollName = `${Date.now()}`;
+		await initializePoll(testPollName);
+		const invalidCandidate = "NonExistentCandidate";
+
+		await expectError(
+			() => program.methods
+				.vote(testPollName, invalidCandidate)
+				.accounts({ signer: provider.wallet.publicKey })
+				.rpc(),
+			"CandidateNotFound",
+			"Candidate not found"
+		);
+	})
+});
