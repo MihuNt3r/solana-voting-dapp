@@ -21,6 +21,19 @@ And request Airdrop
 Now you can go into "Solanavotingdapp program" and create your own Votings and Vote in existing ones
 ![alt text](images/VotingProgram.png)
 
+Since my app is not verified, we have some warnings from Phantom. When vote, please ignore them
+
+Click here
+![alt text](images/Warning1.png)
+
+Then click here
+![alt text](images/Warning2.png)
+
+Then please select checkbox and click button confirm
+![alt text](images/Warning3.png)
+
+
+
 ## Getting Started
 
 ### Prerequisites
