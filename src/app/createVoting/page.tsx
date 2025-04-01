@@ -31,7 +31,12 @@ export default function Page() {
 
 	useEffect(() => {
 		if (hasAttemptedSubmit) {
-			setShowError(options.length < 2 || options.length > 10 || title.length > 32 || description.length > 280);
+			setShowError(
+				options.length < 2 ||
+				options.length > 10 ||
+				getUtf8ByteLength(title) > 32 ||
+				getUtf8ByteLength(description) > 280
+			);
 		}
 	}, [options, hasAttemptedSubmit, title, description]);
 
@@ -45,6 +50,8 @@ export default function Page() {
 	const removeOption = (option: string) => {
 		setOptions(options.filter((o) => o !== option));
 	};
+
+	const getUtf8ByteLength = (str: string) => new TextEncoder().encode(str).length;
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -93,9 +100,9 @@ export default function Page() {
 					required
 				/>
 
-				{showError && (title.length > 32) && (
+				{showError && (getUtf8ByteLength(title) > 32) && (
 					<Typography color="error" variant="body2" sx={{ mt: 1 }}>
-						Title cannot exceed 32 characters.
+						Title cannot exceed 32 bytes.
 					</Typography>
 				)}
 
@@ -111,9 +118,9 @@ export default function Page() {
 					required
 				/>
 
-				{showError && (description.length > 280) && (
+				{showError && (getUtf8ByteLength(description) > 280) && (
 					<Typography color="error" variant="body2" sx={{ mt: 1 }}>
-						Description cannot exceed 280 characters.
+						Description cannot exceed 280 bytes.
 					</Typography>
 				)}
 
@@ -124,10 +131,10 @@ export default function Page() {
 						variant="outlined"
 						value={newOption}
 						onChange={(e) => setNewOption(e.target.value)}
-						error={newOption.length > 32}
+						error={getUtf8ByteLength(newOption) > 32}
 						helperText={
-							<span style={{ visibility: newOption.length > 32 ? "visible" : "hidden" }}>
-								Option cannot exceed 32 characters
+							<span style={{ visibility: getUtf8ByteLength(newOption) > 32 ? "visible" : "hidden" }}>
+								Option cannot exceed 32 bytes
 							</span>
 						}
 					/>
@@ -167,7 +174,7 @@ export default function Page() {
 				)}
 
 				<Box display="flex" justifyContent="center" mt={3}>
-					<Button variant="contained" type="submit" size="large" disabled={loading || (showError && (options.length < 2 || options.length > 10 || title.length > 32 || description.length > 280))}>
+					<Button variant="contained" type="submit" size="large" disabled={loading || (showError && (options.length < 2 || options.length > 10 || getUtf8ByteLength(title) > 32 || getUtf8ByteLength(description) > 280))}>
 						{loading ? <CircularProgress size={24} /> : "Create Voting"}
 					</Button>
 				</Box>
