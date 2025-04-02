@@ -10,13 +10,15 @@ pub struct Candidate {
 }
 
 impl Candidate {
-    pub fn new<S: AsRef<str>>(candidate_name: S) -> std::result::Result<Candidate, ErrorCode> {
-        if candidate_name.as_ref().is_empty() || candidate_name.as_ref().len() > 32 {
+    pub fn new<S: Into<String>>(candidate_name: S) -> std::result::Result<Candidate, ErrorCode> {
+        let candidate_name = candidate_name.into();
+
+        if candidate_name.is_empty() || candidate_name.len() > 32 {
             return Err(ErrorCode::InvalidCandidateName);
         }
 
         Ok(Candidate {
-            candidate_name: candidate_name.as_ref().to_string(),
+            candidate_name: candidate_name,
             candidate_votes: 0,
         })
     }
