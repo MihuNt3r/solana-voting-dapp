@@ -1,60 +1,32 @@
+//! This module provides validation for poll descriptions.
+
 use super::errors::ErrorCode;
 
-#[derive(Debug)]
-pub struct PollDescription(String);
-
-impl PollDescription {
-    pub fn new<S: Into<String>>(poll_description: S) -> Result<PollDescription, ErrorCode> {
-        let poll_description = poll_description.into();
-
-        if poll_description.len() > 280 {
-            return Err(ErrorCode::InvalidPollDescription);
-        }
-
-        Ok(PollDescription(poll_description))
-    }
-}
-
-impl AsRef<str> for PollDescription {
-    fn as_ref(&self) -> &str {
-        &self.0
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_valid_poll_description() {
-        let description = "A valid poll description.";
-        let poll_description = PollDescription::new(description);
-        assert!(poll_description.is_ok());
-        assert_eq!(poll_description.unwrap().as_ref(), description);
+/// Validates the poll description.
+///
+/// # Arguments
+///
+/// * `poll_description` - The poll description text.
+///
+/// # Returns
+///
+/// * `Ok(())` if the description is valid (length ≤ 280).
+/// * `Err(ErrorCode::InvalidPollDescription)` if the description exceeds 280 characters.
+///
+/// # Examples
+///
+/// ```
+/// use solanavotingdapp::domain::poll_description::validate;
+/// use solanavotingdapp::domain::errors::ErrorCode;
+///
+/// assert!(validate("A valid poll description.".to_string()).is_ok());
+/// assert_eq!(validate("a".repeat(281)).unwrap_err(), ErrorCode::InvalidPollDescription);
+/// assert!(validate("a".repeat(280)).is_ok()); // Max length description is valid
+/// ```
+pub fn validate<S: AsRef<str>>(poll_description: S) -> Result<(), ErrorCode> {
+    if poll_description.as_ref().len() > 280 {
+        return Err(ErrorCode::InvalidPollDescription);
     }
 
-    #[test]
-    fn test_empty_poll_description() {
-        let poll_description = PollDescription::new("");
-        assert!(poll_description.is_ok()); // Empty description is valid
-    }
-
-    #[test]
-    fn test_long_poll_description() {
-        let long_description = "a".repeat(281); // 281 characters, exceeding the limit
-        let poll_description = PollDescription::new(long_description);
-        assert!(poll_description.is_err());
-        assert_eq!(
-            poll_description.unwrap_err(),
-            ErrorCode::InvalidPollDescription
-        );
-    }
-
-    #[test]
-    fn test_max_length_poll_description() {
-        let max_description = "a".repeat(280); // Exactly 280 characters, should be valid
-        let poll_description = PollDescription::new(&max_description);
-        assert!(poll_description.is_ok());
-        assert_eq!(poll_description.unwrap().as_ref(), max_description);
-    }
+    Ok(())
 }

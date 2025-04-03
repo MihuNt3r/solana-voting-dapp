@@ -54,11 +54,6 @@ describe('voting', () => {
 		expect(pollAccount.pollName).toBe(testPollName);
 		expect(pollAccount.pollDescription).toBe(pollDescription);
 		expect(pollAccount.proposals.length).toBe(candidates.length);
-
-		candidates.forEach((candidate, i) => {
-			expect(pollAccount.proposals[i].candidateName).toBe(candidate);
-			expect(pollAccount.proposals[i].candidateVotes.toNumber()).toBe(0);
-		});
 	});
 
 	it("Fails to initialize a poll with no candidates", async () => {

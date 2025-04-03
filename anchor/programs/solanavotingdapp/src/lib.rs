@@ -1,8 +1,8 @@
 #![allow(clippy::result_large_err)]
 
-mod domain;
-mod instructions;
-mod state;
+pub mod domain;
+pub mod instructions;
+pub mod state;
 
 use anchor_lang::prelude::*;
 use instructions::initialize_poll::*;

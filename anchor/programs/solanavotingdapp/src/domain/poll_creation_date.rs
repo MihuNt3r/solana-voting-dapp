@@ -1,39 +1,29 @@
 use super::errors::ErrorCode;
 
-#[derive(Debug)]
-pub struct PollCreationDate(i64);
-
-impl PollCreationDate {
-    pub fn new(poll_creation_date: i64) -> Result<PollCreationDate, ErrorCode> {
-        if poll_creation_date < 0 {
-            return Err(ErrorCode::InvalidPollCreationDate);
-        }
-
-        Ok(PollCreationDate(poll_creation_date))
-    }
-}
-
-impl From<PollCreationDate> for i64 {
-    fn from(poll_creation_date: PollCreationDate) -> Self {
-        poll_creation_date.0
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn valid_poll_creation_date() {
-        let poll_date = PollCreationDate::new(100);
-        assert!(poll_date.is_ok());
-        assert_eq!(poll_date.unwrap().0, 100);
+/// Validates the poll creation date.
+///
+/// # Arguments
+///
+/// * `poll_creation_date` - The creation timestamp (e.g., UNIX timestamp).
+///
+/// # Returns
+///
+/// * `Ok(())` if the date is valid.
+/// * `Err(ErrorCode::InvalidPollCreationDate)` if the date is negative.
+///
+/// # Examples
+///
+/// ```
+/// use solanavotingdapp::domain::poll_creation_date::validate;
+/// use solanavotingdapp::domain::errors::ErrorCode;
+///
+/// assert!(validate(100).is_ok());
+/// assert_eq!(validate(-1), Err(ErrorCode::InvalidPollCreationDate));
+/// ```
+pub fn validate(poll_creation_date: i64) -> Result<(), ErrorCode> {
+    if poll_creation_date < 0 {
+        return Err(ErrorCode::InvalidPollCreationDate);
     }
 
-    #[test]
-    fn invalid_poll_creation_date() {
-        let poll_date = PollCreationDate::new(-1);
-        assert!(poll_date.is_err());
-        assert_eq!(poll_date.unwrap_err(), ErrorCode::InvalidPollCreationDate);
-    }
+    Ok(())
 }

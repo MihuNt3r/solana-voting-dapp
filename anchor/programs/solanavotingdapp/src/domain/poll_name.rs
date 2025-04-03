@@ -1,58 +1,33 @@
+//! This module provides validation for poll names.
+
 use super::errors::ErrorCode;
 
-#[derive(Debug)]
-pub struct PollName(String);
-
-impl PollName {
-    pub fn new<S: Into<String>>(poll_name: S) -> Result<PollName, ErrorCode> {
-        let poll_name = poll_name.into();
-
-        if poll_name.is_empty() || poll_name.len() > 32 {
-            return Err(ErrorCode::InvalidPollName);
-        }
-
-        Ok(PollName(poll_name))
-    }
-}
-
-impl AsRef<str> for PollName {
-    fn as_ref(&self) -> &str {
-        &self.0
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_valid_poll_name() {
-        let name = "ValidPoll";
-        let poll_name = PollName::new(name);
-        assert!(poll_name.is_ok());
-        assert_eq!(poll_name.unwrap().as_ref(), name);
+/// Validates the poll name.
+///
+/// # Arguments
+///
+/// * `poll_name` - The poll name string.
+///
+/// # Returns
+///
+/// * `Ok(())` if the name is valid (length between 1 and 32 inclusive).
+/// * `Err(ErrorCode::InvalidPollName)` if the name is empty or exceeds 32 characters.
+///
+/// # Examples
+///
+/// ```
+/// use solanavotingdapp::domain::poll_name::validate;
+/// use solanavotingdapp::domain::errors::ErrorCode;
+///
+/// assert!(validate("ValidPoll".to_string()).is_ok());
+/// assert_eq!(validate("".to_string()).unwrap_err(), ErrorCode::InvalidPollName);
+/// assert_eq!(validate("a".repeat(33)).unwrap_err(), ErrorCode::InvalidPollName);
+/// assert!(validate("a".repeat(32)).is_ok()); // Max length name is valid
+/// ```
+pub fn validate<S: AsRef<str>>(poll_name: S) -> Result<(), ErrorCode> {
+    if poll_name.as_ref().is_empty() || poll_name.as_ref().len() > 32 {
+        return Err(ErrorCode::InvalidPollName);
     }
 
-    #[test]
-    fn test_empty_poll_name() {
-        let poll_name = PollName::new("");
-        assert!(poll_name.is_err());
-        assert_eq!(poll_name.unwrap_err(), ErrorCode::InvalidPollName);
-    }
-
-    #[test]
-    fn test_long_poll_name() {
-        let long_name = "a".repeat(33); // 33 characters, exceeding the limit
-        let poll_name = PollName::new(long_name);
-        assert!(poll_name.is_err());
-        assert_eq!(poll_name.unwrap_err(), ErrorCode::InvalidPollName);
-    }
-
-    #[test]
-    fn test_max_length_poll_name() {
-        let max_name = "a".repeat(32); // Exactly 32 characters, should be valid
-        let poll_name = PollName::new(&max_name);
-        assert!(poll_name.is_ok());
-        assert_eq!(poll_name.unwrap().as_ref(), max_name);
-    }
+    Ok(())
 }
