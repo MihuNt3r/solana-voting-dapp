@@ -43,11 +43,5 @@ pub fn handle_initialize_poll(
     poll_account.poll_creation_date = creation_date;
     poll_account.proposals = candidates.as_vec();
 
-    // *poll_account = PollAccount::new(name, description, creation_date, candidates.as_vec())?;
-    // I've tried to use constructor but I'm receiving the following error:
-    //note: `?` operator cannot convert from `PollAccount` to `anchor_lang::prelude::Account<'_, PollAccount, >`
-    // = note: expected struct `anchor_lang::prelude::Account<'_, PollAccount, >`
-    // found struct `PollAccount`
-
     Ok(())
 }
