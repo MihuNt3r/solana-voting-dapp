@@ -1,7 +1,4 @@
-use crate::domain::{
-    errors, poll_candidates::PollCandidates, poll_creation_date, poll_description, poll_name,
-    Candidate,
-};
+use crate::domain::Candidate;
 use anchor_lang::prelude::*;
 
 #[account]

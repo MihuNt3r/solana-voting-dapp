@@ -1,3 +1,5 @@
+use std::borrow::Cow;
+
 use super::errors::ErrorCode;
 use anchor_lang::prelude::*;
 
@@ -10,7 +12,9 @@ pub struct Candidate {
 }
 
 impl Candidate {
-    pub fn new<S: Into<String>>(candidate_name: S) -> std::result::Result<Candidate, ErrorCode> {
+    pub fn new<S: Into<Cow<'static, str>>>(
+        candidate_name: S,
+    ) -> std::result::Result<Candidate, ErrorCode> {
         let candidate_name = candidate_name.into();
 
         if candidate_name.is_empty() || candidate_name.len() > 32 {
@@ -18,7 +22,7 @@ impl Candidate {
         }
 
         Ok(Candidate {
-            candidate_name: candidate_name,
+            candidate_name: candidate_name.into_owned(),
             candidate_votes: 0,
         })
     }
@@ -66,7 +70,7 @@ mod tests {
     #[test]
     fn test_max_length_candidate_name() {
         let max_name = "a".repeat(32); // Exactly 32 characters, should be valid
-        let candidate = Candidate::new(&max_name);
+        let candidate = Candidate::new(max_name.clone());
         assert!(candidate.is_ok());
         assert_eq!(candidate.unwrap().candidate_name(), max_name);
     }
