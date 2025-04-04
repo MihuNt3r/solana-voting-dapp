@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 
+use crate::constants::*;
 use crate::domain::ErrorCode;
 use crate::state::{poll_account::PollAccount, voter_account::VoterAccount};
 
@@ -12,7 +13,7 @@ pub struct Vote<'info> {
     #[account(
         init_if_needed,
         payer = signer,
-        space = 8 + VoterAccount::INIT_SPACE,
+        space = ANCHOR_DISCRIMINATOR_SIZE + VoterAccount::INIT_SPACE,
         seeds = [b"voter".as_ref(), poll_name.as_ref(), signer.key().as_ref()], // It is possible to generate only one PDA per voter and poll. In this way it is not possible to vote twice for the same poll
         bump
     )]

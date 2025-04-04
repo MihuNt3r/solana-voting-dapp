@@ -1,5 +1,6 @@
 use super::errors::ErrorCode;
 use super::poll_candidate::Candidate;
+use crate::constants::*;
 use std::borrow::Cow;
 use std::collections::HashSet;
 
@@ -24,7 +25,7 @@ impl PollCandidates {
             })
             .collect::<std::result::Result<Vec<Candidate>, ErrorCode>>()?;
 
-        if candidates.len() < 2 || candidates.len() > 10 {
+        if candidates.len() < MIN_PROPOSALS || candidates.len() > MAX_PROPOSALS {
             return Err(ErrorCode::IncorrectAmountOfCandidates);
         }
 

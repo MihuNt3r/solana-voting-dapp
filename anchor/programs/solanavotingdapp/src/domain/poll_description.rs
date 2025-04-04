@@ -1,6 +1,7 @@
 //! This module provides validation for poll descriptions.
 
 use super::errors::ErrorCode;
+use crate::constants::*;
 
 /// Validates the poll description.
 ///
@@ -24,7 +25,7 @@ use super::errors::ErrorCode;
 /// assert!(validate("a".repeat(280)).is_ok()); // Max length description is valid
 /// ```
 pub fn validate<S: AsRef<str>>(poll_description: S) -> Result<(), ErrorCode> {
-    if poll_description.as_ref().len() > 280 {
+    if poll_description.as_ref().len() > POLL_DESC_MAX_LEN {
         return Err(ErrorCode::InvalidPollDescription);
     }
 

@@ -1,12 +1,13 @@
 use std::borrow::Cow;
 
 use super::errors::ErrorCode;
+use crate::constants::*;
 use anchor_lang::prelude::*;
 
 #[account]
 #[derive(Debug, InitSpace)]
 pub struct Candidate {
-    #[max_len(32)]
+    #[max_len(CANDIDATE_NAME_MAX_LEN)]
     candidate_name: String,
     candidate_votes: u64,
 }
@@ -17,7 +18,7 @@ impl Candidate {
     ) -> std::result::Result<Candidate, ErrorCode> {
         let candidate_name = candidate_name.into();
 
-        if candidate_name.is_empty() || candidate_name.len() > 32 {
+        if candidate_name.is_empty() || candidate_name.len() > CANDIDATE_NAME_MAX_LEN {
             return Err(ErrorCode::InvalidCandidateName);
         }
 
@@ -61,7 +62,7 @@ mod tests {
 
     #[test]
     fn test_long_candidate_name() {
-        let long_name = "a".repeat(33); // 33 characters, exceeding the limit
+        let long_name = "a".repeat(CANDIDATE_NAME_MAX_LEN + 1); // 33 characters, exceeding the limit
         let candidate = Candidate::new(long_name);
         assert!(candidate.is_err());
         assert_eq!(candidate.unwrap_err(), ErrorCode::InvalidCandidateName);
@@ -69,7 +70,7 @@ mod tests {
 
     #[test]
     fn test_max_length_candidate_name() {
-        let max_name = "a".repeat(32); // Exactly 32 characters, should be valid
+        let max_name = "a".repeat(CANDIDATE_NAME_MAX_LEN); // Exactly 32 characters, should be valid
         let candidate = Candidate::new(max_name.clone());
         assert!(candidate.is_ok());
         assert_eq!(candidate.unwrap().candidate_name(), max_name);
