@@ -20,7 +20,6 @@ export function getSolanavotingdappProgram(provider: AnchorProvider, address?: P
 export function getSolanavotingdappProgramId(cluster: Cluster) {
 	switch (cluster) {
 		case 'devnet':
-			console.log(process.env.DEVNET_PROGRAM_ID!, 'devnet program id')
 			return new PublicKey(process.env.NEXT_PUBLIC_DEVNET_PROGRAM_ID!)
 		case 'testnet':
 			// This is the program ID for the Solanavotingdapp program on devnet and testnet.
