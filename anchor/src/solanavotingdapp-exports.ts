@@ -3,6 +3,7 @@ import { AnchorProvider, Program } from '@coral-xyz/anchor'
 import { Cluster, PublicKey } from '@solana/web3.js'
 import SolanavotingdappIDL from '../target/idl/solanavotingdapp.json'
 import type { Solanavotingdapp } from '../target/types/solanavotingdapp'
+import 'dotenv/config'
 
 // Re-export the generated IDL and type
 export { Solanavotingdapp, SolanavotingdappIDL }
@@ -19,10 +20,11 @@ export function getSolanavotingdappProgram(provider: AnchorProvider, address?: P
 export function getSolanavotingdappProgramId(cluster: Cluster) {
 	switch (cluster) {
 		case 'devnet':
-			return new PublicKey('9rYcpj6uzpwrn5nUPEwNYMG57wiVXShTowA6aDKEvKei')
+			console.log(process.env.DEVNET_PROGRAM_ID!, 'devnet program id')
+			return new PublicKey(process.env.NEXT_PUBLIC_DEVNET_PROGRAM_ID!)
 		case 'testnet':
 			// This is the program ID for the Solanavotingdapp program on devnet and testnet.
-			return new PublicKey('GGS4omi8yEeDXxi3mRAjpJg4uKKhvBrKmRHp1RmoK134')
+			return new PublicKey(process.env.NEXT_PUBLIC_TESTNET_PROGRAM_ID!)
 		case 'mainnet-beta':
 		default:
 			return SOLANAVOTINGDAPP_PROGRAM_ID
