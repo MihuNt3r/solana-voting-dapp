@@ -41,7 +41,7 @@ pub fn handle_initialize_poll(
     poll_account.poll_name = name;
     poll_account.poll_description = description;
     poll_account.poll_creation_date = creation_date;
-    poll_account.proposals = candidates.as_vec();
+    poll_account.proposals = candidates.into_vec();
 
     Ok(())
 }

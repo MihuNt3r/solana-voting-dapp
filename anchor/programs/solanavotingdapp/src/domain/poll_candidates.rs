@@ -35,6 +35,10 @@ impl PollCandidates {
     pub fn as_vec(&self) -> Vec<Candidate> {
         self.0.clone()
     }
+
+	pub fn into_vec(self) -> Vec<Candidate> {
+		self.0
+	}
 }
 
 #[cfg(test)]
