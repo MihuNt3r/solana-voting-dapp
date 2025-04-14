@@ -50,7 +50,9 @@ mod tests {
         let name = "CandidateName";
         let candidate = Candidate::new(name);
         assert!(candidate.is_ok());
-        assert_eq!(candidate.unwrap().candidate_name(), name);
+        let candidate = candidate.unwrap();
+        assert_eq!(candidate.candidate_name(), name);
+        assert_eq!(candidate.candidate_votes(), 0);
     }
 
     #[test]

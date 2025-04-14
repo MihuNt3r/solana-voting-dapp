@@ -1,5 +1,6 @@
 use anchor_lang::prelude::*;
 
+use crate::constants::*;
 use crate::domain::poll_candidates::PollCandidates;
 use crate::domain::{poll_creation_date, poll_description, poll_name, ErrorCode};
 use crate::state::poll_account::PollAccount;
@@ -13,7 +14,7 @@ pub struct InitializePoll<'info> {
     #[account(
         init_if_needed,
         payer = signer,
-        space = 8 + PollAccount::INIT_SPACE,
+        space = ANCHOR_DISCRIMINATOR_SIZE + PollAccount::INIT_SPACE,
         seeds = [b"poll".as_ref(), poll_name.as_ref()],
         bump
     )]
