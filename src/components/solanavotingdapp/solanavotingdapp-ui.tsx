@@ -6,10 +6,13 @@ import { useSolanavotingdappProgram, useVotingProgramAccount } from './solanavot
 import { CircularProgress } from '@mui/material'
 import { Button } from '@mui/material'
 import { BN } from '@coral-xyz/anchor'
+import { useConnection, useWallet } from '@solana/wallet-adapter-react'
 
 export function VotingList() {
 	const { accounts, getProgramAccount } = useSolanavotingdappProgram()
 	const [searchQuery, setSearchQuery] = useState('')
+	const [currentPage, setCurrentPage] = useState(1)
+	const itemsPerPage = 16
 
 	if (getProgramAccount.isLoading) {
 		return <span className="loading loading-spinner loading-lg"></span>
@@ -27,6 +30,17 @@ export function VotingList() {
 		account.account?.pollName?.toLowerCase().includes(searchQuery.toLowerCase())
 	) || [];
 
+	// Sort accounts by pollCreationDate in descending order
+	const sortedAccounts = filteredAccounts.sort((a: { account: { pollCreationDate: BN } }, b: { account: { pollCreationDate: BN } }) => {
+		const dateA = a.account.pollCreationDate.toNumber()
+		const dateB = b.account.pollCreationDate.toNumber()
+		return dateB - dateA;
+	})
+
+	const totalPages = Math.ceil(sortedAccounts.length / itemsPerPage)
+	const startIndex = (currentPage - 1) * itemsPerPage
+	const paginatedAccounts = sortedAccounts.slice(startIndex, startIndex + itemsPerPage)
+
 
 	return (
 		<div className={'space-y-6'}>
@@ -36,22 +50,52 @@ export function VotingList() {
 					placeholder="Search polls..."
 					className="input input-bordered w-full max-w-md"
 					value={searchQuery}
-					onChange={(e) => setSearchQuery(e.target.value)}
+					onChange={(e) => {
+						setSearchQuery(e.target.value)
+						setCurrentPage(1)
+					}}
 				/>
 			</div>
 
 			{accounts.isLoading ? (
 				<span className="loading loading-spinner loading-lg"></span>
-			) : accounts.data?.length ? (
-				<div className="grid md:grid-cols-4 gap-4">
-					{filteredAccounts.map((account: { publicKey: PublicKey }) => (
-						<VotingCard key={account.publicKey.toString()} account={account.publicKey} />
-					))}
-				</div>
+			) : filteredAccounts.length ? (
+				<>
+					<div className="grid md:grid-cols-4 gap-4">
+						{paginatedAccounts.map((account: { publicKey: PublicKey }) => (
+							<VotingCard key={account.publicKey.toString()} account={account.publicKey} />
+						))}
+					</div>
+
+					{/* Pagination Controls */}
+					<div className="flex justify-center mt-4 space-x-4">
+						<Button
+							variant="contained"
+							color="primary"
+							disabled={currentPage === 1}
+							onClick={() => setCurrentPage((prev) => prev - 1)}
+						>
+							Previous
+						</Button>
+
+						<span className="text-lg font-semibold">
+							Page {currentPage} of {totalPages}
+						</span>
+
+						<Button
+							variant="contained"
+							color="primary"
+							disabled={currentPage === totalPages}
+							onClick={() => setCurrentPage((prev) => prev + 1)}
+						>
+							Next
+						</Button>
+					</div>
+				</>
 			) : (
 				<div className="text-center">
-					<h2 className={'text-2xl'}>No accounts</h2>
-					No accounts found. Create one above to get started.
+					<h2 className={'text-2xl'}>No polls</h2>
+					No polls found. Create one above to get started.
 				</div>
 			)}
 		</div>
@@ -62,6 +106,9 @@ export function VotingPopup({ account, onClose }: { account: PublicKey, onClose:
 	const { accountQuery } = useVotingProgramAccount({
 		account,
 	})
+
+	const { connection } = useConnection();
+	const { connected } = useWallet();
 
 	const { vote } = useSolanavotingdappProgram()
 
@@ -99,31 +146,40 @@ export function VotingPopup({ account, onClose }: { account: PublicKey, onClose:
 	};
 
 	const generateBlink = async () => {
-		if (!pollName) {
-			console.error("Poll name is missing");
-			return;
-		}
+		const windowAny = window as any;
+		const provider = windowAny.solana;
+		console.log('Provider', provider);
+		// const rpcUrl = provider.getCluster();
+		// console.log('RPC URL', rpcUrl);
+		console.log({ connection });
 
-		try {
-			const response = await fetch(`/api/vote?votingName=${encodeURIComponent(pollName)}`);
+		console.log('Rpc endpoint', connection.rpcEndpoint);
+		console.log({ connected });
+		// if (!pollName) {
+		// 	console.error("Poll name is missing");
+		// 	return;
+		// }
 
-			if (!response.ok) {
-				throw new Error(`Failed to fetch voting data: ${response.statusText}`);
-			}
+		// try {
+		// 	const response = await fetch(`/api/vote?votingName=${encodeURIComponent(pollName)}`);
 
-			const data = await response.json();
-			console.log("Fetched Voting Data:", data);
+		// 	if (!response.ok) {
+		// 		throw new Error(`Failed to fetch voting data: ${response.statusText}`);
+		// 	}
 
-			// You can update the UI or state with the fetched data here if needed
+		// 	const data = await response.json();
+		// 	console.log("Fetched Voting Data:", data);
 
-		} catch (error) {
-			console.error("Error fetching voting data:", error);
-		}
+		// 	// You can update the UI or state with the fetched data here if needed
+
+		// } catch (error) {
+		// 	console.error("Error fetching voting data:", error);
+		// }
 	}
 
 	return (
 		<div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-			<div className="bg-white p-6 rounded-md shadow-lg max-w-lg w-full">
+			<div className="bg-white p-6 rounded-md shadow-lg w-[75vw] max-w-screen-lg">
 				<h2 className="text-2xl font-bold">{pollName}</h2>
 				<p>{pollDescription}</p>
 				<div className="space-y-4 mt-4">
@@ -131,8 +187,10 @@ export function VotingPopup({ account, onClose }: { account: PublicKey, onClose:
 					<div className='grid md:grid-cols-3 '>
 						{proposals?.sort((a: { candidateVotes: { toNumber: () => number } }, b: { candidateVotes: { toNumber: () => number } }) => b.candidateVotes.toNumber() - a.candidateVotes.toNumber()).map((proposal: { candidateName: any; candidateVotes: any }, index: Key | null | undefined) => (
 							<div key={index} className="p-4 border border-gray-300">
-								<h4 className="text-lg font-bold">{proposal.candidateName}</h4>
-								<p className="text-sm">Votes: {proposal.candidateVotes.toNumber()}</p>
+								<div>
+									<h4 className="text-lg font-bold">{proposal.candidateName}</h4>
+									<p className="text-sm">Votes: {proposal.candidateVotes.toNumber()}</p>
+								</div>
 								<Button
 									variant="contained"
 									color="primary"
@@ -193,8 +251,6 @@ function VotingCard({ account }: { account: PublicKey }) {
 					<h2 className="card-title justify-center text-3xl cursor-pointer" onClick={openModal}>
 						{pollName}
 					</h2>
-					<div className="card-actions justify-around">
-					</div>
 				</div>
 			</div>
 			{isModalOpen && (

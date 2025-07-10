@@ -33,7 +33,6 @@ Then please select checkbox and click button confirm
 ![alt text](images/Warning3.png)
 
 
-
 ## Getting Started
 
 ### Prerequisites
